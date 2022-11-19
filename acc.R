@@ -10,7 +10,7 @@ load("./tidied/nmap_data_tidied.RData")
 write.csv(nmap_acc.wide, file = "acc_subj_6cond_wide.csv", row.names = FALSE)
 #
 
-acc.by.subj.cond <- nmap_data %>%
+acc.by.subj.cond <- nmap_data.long%>%
   group_by(Subject, cond) %>%
   summarise(individual_acc = mean(correct_or_not, na.rm=T))
 
@@ -33,7 +33,7 @@ acc.by.subj.cond %>%
   
 
 
-mym <- glmer(correct_or_not ~ cond + (1|Subject), family = "binomial", data = nmap_data)
+mym <- glmer(correct_or_not ~ cond + (1|Subject), family = "binomial", data = nmap_data.long)
 summary(mym)
 Anova(mym)
 
