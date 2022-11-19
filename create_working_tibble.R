@@ -5,11 +5,11 @@ library("readxl")
 rm(list=ls())
 setwd(dir="../data/beh")
 
-# filter data using this list of subjects
-data.subjlist <- read_csv("BEHAVIORAL_ERPGOOD_SUBLIST.csv", col_names = T) %>%
-  select(SUBNUMB, PREPOST)
-
-table(data.subjlist$PREPOST)
+# # filter data using this list of subjects
+# data.subjlist <- read_csv("BEHAVIORAL_ERPGOOD_SUBLIST.csv", col_names = T) %>%
+#   select(SUBNUMB, PREPOST)
+# 
+# table(data.subjlist$PREPOST)
 
 # variables of interest
 my_vars <- c("Subject", "Session", "Trial", "image[SubTrial]", "sound1[SubTrial]", "tag", 
@@ -20,16 +20,16 @@ data.pre <- read_csv("nmap_merged_PRE.csv", col_names = T) %>%
   select(my_vars) %>%
   rename(stim.image = `image[SubTrial]`,
          stim.sound = `sound1[SubTrial]`) %>%
-  filter(Session == 1, # make sure all observations are from session 1
-         Subject %in% data.subjlist$SUBNUMB[data.subjlist$PREPOST==1])  %>% # filter subjects whose ERP data are usable
+  filter(Session == 1) %>% # make sure all observations are from session 1
+         # Subject %in% data.subjlist$SUBNUMB[data.subjlist$PREPOST==1])  %>% # filter subjects whose ERP data are usable
   drop_na(stim.image)
 
 data.post <- read_csv("nmap_merged_POST.csv", col_names = T) %>%
   select(my_vars) %>%
   rename(stim.image = `image[SubTrial]`,
          stim.sound = `sound1[SubTrial]`) %>%
-  filter(Session==2, # make sure all observations are from session 2
-         Subject %in% data.subjlist$SUBNUMB[data.subjlist$PREPOST==2]) %>% # filter subjects whose ERP data are usable
+  filter(Session==2) %>% # make sure all observations are from session 2
+         # Subject %in% data.subjlist$SUBNUMB[data.subjlist$PREPOST==2]) %>% # filter subjects whose ERP data are usable
   drop_na(stim.image)
 
 # combine datasets and tidy
