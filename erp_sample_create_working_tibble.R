@@ -17,8 +17,11 @@ data_sample <- read_csv("RATIO_medAD_P2indtrialdata.csv", col_names = F) %>%
            case_when(
              cond %in% c(1, 2) ~ "close",
              cond %in% c(3, 4) ~ "med",
-             cond %in% c(5, 6) ~ "far"
-           ))
+             cond %in% c(5, 6) ~ "far"),
+         distance = 
+           case_when(
+             cond %in% c(1, 2, 3, 4) ~ "1",
+             cond %in% c(5, 6) ~ "2"))
 
 # Save and export ----
 
