@@ -12,7 +12,21 @@ data_N2_P2p_375_475 <- read_csv("RATIO_medAD_P2indtrialdata.csv", col_names = F)
          cond = X3,
          erp.p2p = X4,
          erp.n2 = X5,
-         time_point = X6) %>%
+         time_point = X6) 
+
+data_N1_P2a <- read_csv("RATIO_medAD_N1indtrialdata.csv", col_names = F) %>%
+  rename(subj_num = X1, # rename header according to readme_RATIO_medAD_N1indtrialdata.txt
+         KL.cont = X2,
+         cond = X3,
+         erp.n1 = X4,
+         erp.p2a = X5,
+         time_point = X6) 
+
+
+# Combine data frames and tidy
+data_erp_all <- full_join(data_N2_P2p_375_475, data_N1_P2a, by = c("subj_num", "time_point", "cond", "KL.cont")) %>%
+  pivot_longer(cols = starts_with("erp"), names_to = "component", names_prefix = "erp.", values_to = "amp") %>%
+  distinct(subj_num, time_point, KL.cont, cond, component, amp) %>%
   mutate(ratio = 
            case_when(
              cond %in% c(1, 2) ~ "close",
@@ -21,16 +35,8 @@ data_N2_P2p_375_475 <- read_csv("RATIO_medAD_P2indtrialdata.csv", col_names = F)
          distance = 
            case_when(
              cond %in% c(1, 2, 3, 4) ~ "1",
-             cond %in% c(5, 6) ~ "2"))
-
-data_N1_P2a <- read_csv("RATIO_medAD_N1indtrialdata.csv", col_names = F) %>%
-  rename(subj_num = X1, # rename header according to readme_RATIO_medAD_N1indtrialdata.txt
-         KL.cont = X2,
-         cond = X3,
-         erp.n1 = X4,
-         erp.p2a = X5,
-         time_point = X6) %>%
-  mutate(cardinal = 
+             cond %in% c(5, 6) ~ "2"),
+         cardinal = 
            case_when(
              cond %in% c(4, 6) ~ 1,
              cond %in% c(2, 3) ~ 2,
@@ -38,6 +44,6 @@ data_N1_P2a <- read_csv("RATIO_medAD_N1indtrialdata.csv", col_names = F) %>%
 
 # Save and export ----
 
-save(data_N2_P2p_375_475, data_N1_P2a, file="../tidied/erp_tidied.RData")
+save(data_erp_all, file="../tidied/erp_tidied.RData")
 
 _
