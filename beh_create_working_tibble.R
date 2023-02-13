@@ -1,3 +1,9 @@
+#######################
+# This script reads in behavioral response data during ERP collection 
+# (answering whether the quantity of visually presented items is more or less than the heard number words)
+# and outputs data frames with individual performance (accuracy across time points and conditions) in both long and wide format
+#######################
+
 # Set up
 library("tidyverse")
 library("readxl")
