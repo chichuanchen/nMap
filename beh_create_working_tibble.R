@@ -15,7 +15,7 @@ setwd(dir="../")
 
 #########################
 # variables of interest
-my_vars <- c("PREPOST", "SUB", 
+my_vars <- c("PREPOST", "SUB", "SEX", "AGE", "KL",
              "WM", "CONFLICT", "INHIBIT", "VOCABRAW")
 
 data.raw <- read_excel("newseg_medAD_11.16.22.xlsx") %>%
