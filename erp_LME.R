@@ -8,8 +8,9 @@ library("car") # leveneTest
 library("emmeans") # extract estimated marginal means
 
 rm(list = ls())
-load("../tidied/erp_tidied.RData")
+load("../data/ERP/tidied/erp_tidied.RData")
 
+# test
 # Define categorical KL
 data_erp_all <- data_erp_all %>%
   mutate(KL.cat = if_else(KL.cont %in% c(1:4), "SS", "CP"))
