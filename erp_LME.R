@@ -11,24 +11,74 @@ rm(list = ls())
 load("../data/ERP/tidied/erp_tidied.RData")
 
 # test
-# Define categorical KL
-data_erp_all <- data_erp_all %>%
-  mutate(KL.cat = if_else(KL.cont %in% c(1:4), "SS", "CP"))
-
-
 # Explicit Data type -----
+data_erp_all <- data_erp_all %>%
+  mutate(KL.cat = factor(if_else(KL.cont %in% c(1:4), "SS", "CP")))
 data_erp_all$subj_num <- as.factor(data_erp_all$subj_num)
-
-data_erp_all$ratio <- factor(data_erp_all$ratio, levels = c("close", "med", "far")) 
-data_erp_all$distance <- factor(data_erp_all$distance, levels = c("1", "2"))
-data_erp_all$cardinal <- factor(data_erp_all$cardinal, levels = c("1", "2","3"))
-
 data_erp_all$time_point <- as.factor(data_erp_all$time_point)
 
-data_erp_all$KL.cat <- factor(data_erp_all$KL.cat, levels = c("SS", "CP")) 
+data_erp_all$ratio <- factor(data_erp_all$ratio, levels = c("close", "med", "far")) 
+data_erp_all$distance <- as.numeric(data_erp_all$distance)
+
+glimpse(data_erp_all)
 
 
 # FIT LME MODEL -----
+## N1 -----
+data.n1 <- data_erp_all %>% filter(component == "n1")
+glimpse(data.n1)
+### Cardinal -----
+model.n1.cardinal.full <- lmerTest::lmer(amp ~ cardinal + KL.cat + cardinal:KL.cat + time_point + (time_point|subj_num), # correlated slope & intercept
+                                         data = data.n1, REML = T)
+
+# model.n1.cardinal.SS <- lmerTest::lmer(amp ~ cardinal + time_point + (time_point|subj_num), # resulted in singular fit
+#                                      data = subset(data.n1, KL.cat == "SS"), REML = T)
+model.n1.cardinal.SS <- lmerTest::lmer(amp ~ cardinal + time_point + (1|subj_num), # random subject intercept
+                                       data = subset(data.n1, KL.cat == "SS"), REML = T)
+
+model.n1.cardinal.CP <- lmerTest::lmer(amp ~ cardinal + time_point + (1|subj_num), # random subject intercept
+                                     data = subset(data.n1, KL.cat == "CP"), REML = T)
+#### test model assumption -----
+# plot(resid(model.n1.cardinal.full), data.n1$amp) # Linearity (visual inspection)
+# qqmath(model.n1.cardinal.full) # Normal distribution of residuals (visual inspection for sample N > 5000)
+# leveneTest(residuals(model.n1.cardinal.full) ~ data.n1$KL.cat) # Homoscedasticity
+# 
+## ### read model output -----
+ranova(model.n1.cardinal.full)
+anova(model.n1.cardinal.full)
+Anova(model.n1.cardinal.full, type="III")
+anova(model.n1.cardinal.SS)
+anova(model.n1.cardinal.CP)
+summary(model.n1.cardinal.full)
+summary(model.n1.cardinal.SS)
+summary(model.n1.cardinal.CP)
+
+#### emmeans -----
+emmean.n1.cardinal <- emmeans(model.n1.cardinal.full, pairwise~cardinal|KL.cat, # within group comparison: compare levels of ratio within each level of KL
+                              mode = "satterthwaite", 
+                              lmerTest.limit = 240000)
+emmean.n1.cardinal$contrasts %>% data.frame()
+data.emmean.n1.cardinal <- emmean.n1.cardinal$emmeans %>% data.frame() # used for plot
+
+#### plots-----
+
+data_plot.indi <- data.n1 %>%
+  group_by(cardinal, KL.cat, subj_num, time_point) %>%
+  summarise(ind.mean_erp.n1 = mean(amp, na.rm=T)) 
+
+ggplot(data = data.emmean.n1.cardinal,
+       aes(x=cardinal, y=emmean, color=KL.cat, group=KL.cat)) +
+  geom_point(position=position_dodge(.3)) +
+  geom_line(position=position_dodge(.3)) +
+  geom_errorbar(aes(ymin=lower.CL, ymax=upper.CL),
+                width = .2, linewidth=.8, position=position_dodge(.3)) +
+  labs(x = "Cardinal Value of Visual Quantity", y="Estimated Marginal Means of N1 Amplitude (mV)",
+       title = "Error Bars = 95% C.I.", color = "Knower-level") 
+# +
+#   
+#   geom_jitter(data = data_plot.indi,
+#   aes(x=cardinal, y=ind.mean_erp.n1, shape=time_point),position=position_dodge(.9))
+
 
 ## P2p -----
 data.p2p <- data_erp_all %>% filter(component == "p2p")
@@ -267,49 +317,5 @@ ggplot(data = data.emmean.n2.distance,
 
 
 
-## N1 -----
-data.n1 <- data_erp_all %>% filter(component == "n1")
-### Cardinal -----
-model.n1.cardinal.full <- lmerTest::lmer(amp ~ cardinal * KL.cat + time_point + (time_point|subj_num), # correlated slope & intercept
-                                      data = data.n1, REML = T)
 
-#### test model assumption -----
-# plot(resid(model.n1.cardinal.full), data.n1$amp) # Linearity (visual inspection)
-# qqmath(model.n1.cardinal.full) # Normal distribution of residuals (visual inspection for sample N > 5000)
-# leveneTest(residuals(model.n1.cardinal.full) ~ data.n1$cardinal) # Homoscedasticity
-# 
-## ### read model output -----
-
-anova(model.n1.cardinal.full)
-anova(model.n1.cardinal.SS)
-anova(model.n1.cardinal.CP)
-summary(model.n1.cardinal.full)
-summary(model.n1.cardinal.SS)
-summary(model.n1.cardinal.CP)
-
-#### emmeans -----
-emmean.n1.cardinal <- emmeans(model.n1.cardinal.full, pairwise~cardinal|KL.cat, # within group comparison: compare levels of ratio within each level of KL
-                              mode = "satterthwaite", 
-                              lmerTest.limit = 240000)
-emmean.n1.cardinal$contrasts %>% data.frame()
-data.emmean.n1.cardinal <- emmean.n1.cardinal$emmeans %>% data.frame() # used for plot
-
-#### plots-----
-
-data_plot.indi <- data.n1 %>%
-  group_by(cardinal, KL.cat, subj_num, time_point) %>%
-  summarise(ind.mean_erp.n1 = mean(amp, na.rm=T)) 
-
-ggplot(data = data.emmean.n1.cardinal,
-       aes(x=cardinal, y=emmean, color=KL.cat, group=KL.cat)) +
-  geom_point(position=position_dodge(.3)) +
-  geom_line(position=position_dodge(.3)) +
-  geom_errorbar(aes(ymin=lower.CL, ymax=upper.CL),
-                width = .2, linewidth=.8, position=position_dodge(.3)) +
-  labs(x = "Cardinal Value of Visual Quantity", y="Estimated Marginal Means of N1 Amplitude (mV)",
-       title = "Error Bars = 95% C.I.", color = "Knower-level") 
-# +
-#   
-#   geom_jitter(data = data_plot.indi,
-#   aes(x=cardinal, y=ind.mean_erp.n1, shape=time_point),position=position_dodge(.9))
 
