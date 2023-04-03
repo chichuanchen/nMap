@@ -45,8 +45,12 @@ model.n1.cardinal.CP <- lmerTest::lmer(amp ~ cardinal + time_point + (1|subj_num
 # 
 ## ### read model output -----
 ranova(model.n1.cardinal.full)
+ranova(model.n1.cardinal.SS)
+ranova(model.n1.cardinal.CP)
+
 anova(model.n1.cardinal.full)
 Anova(model.n1.cardinal.full, type="III")
+
 anova(model.n1.cardinal.SS)
 anova(model.n1.cardinal.CP)
 summary(model.n1.cardinal.full)
