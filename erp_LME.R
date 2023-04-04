@@ -91,12 +91,20 @@ ggplot() +
 
 
 ## P2p -----
-data.p2p <- data_erp_all %>% filter(component == "p2p")
+data.p2p <- data_erp_all %>% filter(component == "p2p") %>%
+  mutate(ratio.num = case_when(
+    ratio == "far" ~ 3,
+    ratio == "med" ~ 2,
+    ratio == "close" ~ 1.5
+  ))
+glimpse(data.p2p)
+
 ### Ratio -----
 
-model.p2p.ratio.full <- lmerTest::lmer(amp ~ ratio * KL.cat + time_point + (time_point|subj_num), # correlated slope & intercept
+model.p2p.ratio.full.factor <- lmerTest::lmer(amp ~ ratio * KL.cat + time_point + (time_point|subj_num), # correlated slope & intercept
                                data = data.p2p, REML = T)
-
+model.p2p.ratio.full <- lmerTest::lmer(amp ~ ratio.num * KL.cat + time_point + (time_point|subj_num), # correlated slope & intercept
+                                       data = data.p2p, REML = T)
 
 #### test model assumption -----
 # plot(resid(model.p2p.ratio.full), data.p2p$amp) # Linearity (visual inspection)
@@ -105,9 +113,9 @@ model.p2p.ratio.full <- lmerTest::lmer(amp ~ ratio * KL.cat + time_point + (time
 
 
 # break down KL levels and test linear effect of ratio
-model.p2p.ratio.SS <- lmerTest::lmer(amp ~ ratio + time_point + (time_point|subj_num), # correlated slope & intercept
+model.p2p.ratio.SS <- lmerTest::lmer(amp ~ ratio.num + time_point + (time_point|subj_num), # correlated slope & intercept
                data = subset(data.p2p, KL.cat == "SS"), REML = T)
-model.p2p.ratio.CP <- lmerTest::lmer(amp ~ ratio + time_point + (time_point|subj_num), # correlated slope & intercept
+model.p2p.ratio.CP <- lmerTest::lmer(amp ~ ratio.num + time_point + (time_point|subj_num), # correlated slope & intercept
                                data = subset(data.p2p, KL.cat == "CP"), REML = T)
 
 
@@ -118,43 +126,39 @@ anova(model.p2p.ratio.SS)
 anova(model.p2p.ratio.CP)
 
 summary(model.p2p.ratio.full)
+summary(model.p2p.ratio.full.factor)
 summary(model.p2p.ratio.SS)
 summary(model.p2p.ratio.CP)
 
-# fixef(model.p2p.ratio.CP)
-# confint(model.p2p.ratio.CP, oldNames = FALSE)
-#### Linearity of ratio effect -----
-contrasts(data.p2p$ratio) # check contrast
-
-# define linear contrast from close, med, to far, and reverse
-contrasts(data.p2p$ratio) <- matrix(c(-1,0,1,1,0,-1), ncol = 2)
-contrasts(data_N2_P2p_375_475$ratio) <- matrix(c(0,1,2,2,1,0), ncol = 2)
-model.p2p.ratio.CP.linear <- lmerTest::lmer(amp ~ ratio + time_point + (time_point|subj_num), # correlated slope & intercept
-                                     data = subset(data.p2p, KL.cat == "CP"), REML = T)
-summary(model.p2p.ratio.CP.linear) # not sig
-
-# #### emmeans 
-emmean.p2p.ratio <- emmeans(model.p2p.ratio.full, pairwise~ratio|KL.cat, # within group comparison: compare levels of ratio within each level of KL
-                            mode = "satterthwaite", 
+#### Data for plot: emmeans & pred -----
+emmean.p2p.ratio <- emmeans(model.p2p.ratio.full.factor, pairwise~ratio|KL.cat, # within group comparison: compare levels of ratio within each level of KL
+                            mode = "satterthwaite",
                             lmerTest.limit = 240000)
 emmean.p2p.ratio$contrasts %>% data.frame()
-data.emmean.p2p.ratio <- emmean.p2p.ratio$emmeans %>% data.frame() # used for plot
+data.emmean.p2p.ratio <- emmean.p2p.ratio$emmeans %>% 
+  data.frame() %>% 
+  mutate(ratio.num = case_when(
+    ratio == "far" ~ 3,
+    ratio == "med" ~ 2,
+    ratio == "close" ~ 1.5)) # used for plot
+
+data.p2p.pred <- tibble(pred.y = predict(model.p2p.ratio.full),
+                        ratio.num = data.p2p$ratio.num,
+                        KL.cat = data.p2p$KL.cat,
+                        time_point = data.p2p$time_point,
+                        subj_num = data.p2p$subj_num) %>%
+  mutate(KL.cat = factor(KL.cat, levels = c("SS", "CP")))
 
 #### plots-----
-data_plot.indi <- data.p2p %>%
-  group_by(ratio, KL.cat, subj_num, time_point) %>%
-  summarise(ind.mean_erp.p2p = mean(amp, na.rm=T)) 
-
-ggplot(data = data.emmean.p2p.ratio,
-       aes(x=ratio, y=emmean, color=KL.cat, group=KL.cat)) +
-  geom_point(position=position_dodge(.3)) +
-  geom_line(position=position_dodge(.3)) +
-  geom_errorbar(aes(ymin=lower.CL, ymax=upper.CL),
-                width = .2, linewidth=.8, position=position_dodge(.3)) +
-  labs(x = "Numerical Ratio between Number Word and Quantity", y="Estimated Marginal Means of P2p Amplitude (mV)",
-       title = "Error Bars = 95% C.I.", color = "Knower-level")
-  # geom_jitter(data = data_plot.indi, 
-  #            aes(x=ratio, y=ind.mean_erp.p2p, shape=time_point),position=position_dodge(.9))
+ggplot() + 
+  geom_smooth(data=data.p2p.pred, aes(x = ratio.num, y = pred.y,
+                                     group = KL.cat, color = KL.cat), 
+              method = "lm", se = FALSE, linewidth = 1.2) +
+  geom_point(aes(x=ratio.num, y=emmean, color = KL.cat), data=data.emmean.p2p.ratio, 
+             position=position_dodge(.1), size = 2) +
+  geom_errorbar(data = data.emmean.p2p.ratio, aes(x = ratio.num, ymin=lower.CL, ymax=upper.CL, color = KL.cat),
+                width = .2, linewidth=.6, position=position_dodge(.1)) +
+  labs(x = "Numerical ratio", y = "Estimated marginal means of P2p amplitude (mV)", color = "CP status")
 
 
 ### Distance -----
@@ -181,35 +185,49 @@ summary(model.p2p.distance.SS)
 summary(model.p2p.distance.CP)
 
 
-# #### emmeans 
+#### Data for plot: emmeans & pred -----
 emmean.p2p.distance <- emmeans(model.p2p.distance.full, pairwise~distance|KL.cat, # within group comparison: compare levels of distance within each level of KL
-                            mode = "satterthwaite", 
+                            mode = "satterthwaite",
                             lmerTest.limit = 240000)
 emmean.p2p.distance$contrasts %>% data.frame()
-data.emmean.p2p.distance <- emmean.p2p.distance$emmeans %>% data.frame() # used for plot
+data.emmean.p2p.distance <- emmean.p2p.distance$emmeans %>% 
+  data.frame()  # used for plot
+
+data.p2p.pred <- tibble(pred.y = predict(model.p2p.distance.full),
+                        distance = data.p2p$distance,
+                        KL.cat = data.p2p$KL.cat,
+                        time_point = data.p2p$time_point,
+                        subj_num = data.p2p$subj_num) %>%
+  mutate(KL.cat = factor(KL.cat, levels = c("SS", "CP")))
 
 #### plots-----
-data_plot.indi <- data.p2p %>%
-  group_by(distance, KL.cat, subj_num, time_point) %>%
-  summarise(ind.mean_erp.p2p = mean(amp, na.rm=T)) 
-
-ggplot(data = data.emmean.p2p.distance,
-       aes(x=distance, y=emmean, color=KL.cat, group=KL.cat)) +
-  geom_point(position=position_dodge(.3)) +
-  geom_line(position=position_dodge(.3)) +
-  geom_errorbar(aes(ymin=lower.CL, ymax=upper.CL),
-                width = .2, linewidth=.8, position=position_dodge(.3)) +
-  labs(x = "Numerical Distance between Number Word and Quantity", y="Estimated Marginal Means of P2p Amplitude (mV)",
-       title = "Error Bars = 95% C.I.", color = "Knower-level")
+ggplot() + 
+  geom_smooth(data=data.p2p.pred, aes(x = distance, y = pred.y,
+                                      group = KL.cat, color = KL.cat), 
+              method = "lm", se = FALSE, linewidth = 1.2) +
+  geom_point(aes(x=distance, y=emmean, color = KL.cat), data=data.emmean.p2p.distance, 
+             position=position_dodge(.1), size = 2) +
+  geom_errorbar(data = data.emmean.p2p.distance, aes(x = distance, ymin=lower.CL, ymax=upper.CL, color = KL.cat),
+                width = .2, linewidth=.6, position=position_dodge(.1)) +
+  labs(x = "Absolute distance", y = "Estimated marginal means of P2p amplitude (mV)", color = "CP status") +
+  scale_x_continuous(breaks=c(1, 2))
   
 
 ## N2 -----
-data.n2 <- data_erp_all %>% filter(component == "n2")
+data.n2 <- data_erp_all %>% filter(component == "n2") %>%
+  mutate(ratio.num = case_when(
+    ratio == "far" ~ 3,
+    ratio == "med" ~ 2,
+    ratio == "close" ~ 1.5
+  ))
+glimpse(data.n2)
+
 data.n2.nooutlier <- data.n2 %>% filter(!amp < -100)
 ### Ratio -----
-model.n2.ratio.full <- lmerTest::lmer(amp ~ ratio * KL.cat + time_point + (time_point|subj_num), # correlated slope & intercept
-                                      data = data.n2.nooutlier, REML = T)
-
+model.n2.ratio.full.factor <- lmerTest::lmer(amp ~ ratio * KL.cat + time_point + (time_point|subj_num), # correlated slope & intercept
+                                              data = data.n2, REML = T)
+model.n2.ratio.full <- lmerTest::lmer(amp ~ ratio.num * KL.cat + time_point + (time_point|subj_num), # correlated slope & intercept
+                                       data = data.n2, REML = T)
 #### test model assumption -----
 # plot(resid(model.n2.ratio.full), data.n2.nooutlier$amp) # Linearity (visual inspection)
 # qqmath(model.n2.ratio.full) # Normal distribution of residuals (visual inspection for sample N > 5000)
@@ -217,10 +235,15 @@ model.n2.ratio.full <- lmerTest::lmer(amp ~ ratio * KL.cat + time_point + (time_
 
 # break down KL levels and test linear effect of ratio
 
-model.n2.ratio.SS <- lmerTest::lmer(amp ~ ratio + time_point + (time_point|subj_num), # correlated slope & intercept
-                                     data = subset(data.n2.nooutlier, KL.cat == "SS"), REML = T)
-model.n2.ratio.CP <- lmerTest::lmer(amp ~ ratio + time_point + (time_point|subj_num), # correlated slope & intercept
-                                     data = subset(data.n2.nooutlier, KL.cat == "CP"), REML = T)
+model.n2.ratio.SS <- lmerTest::lmer(amp ~ ratio.num + time_point + (time_point|subj_num), # correlated slope & intercept
+                                     data = subset(data.n2, KL.cat == "SS"), REML = T)
+model.n2.ratio.CP <- lmerTest::lmer(amp ~ ratio.num + time_point + (time_point|subj_num), # correlated slope & intercept
+                                     data = subset(data.n2, KL.cat == "CP"), REML = T)
+
+model.n2.ratio.SS.factor <- lmerTest::lmer(amp ~ ratio + time_point + (time_point|subj_num), # correlated slope & intercept
+                                    data = subset(data.n2, KL.cat == "SS"), REML = T)
+model.n2.ratio.CP.factor <- lmerTest::lmer(amp ~ ratio + time_point + (time_point|subj_num), # correlated slope & intercept
+                                    data = subset(data.n2, KL.cat == "CP"), REML = T)
 
 # plot(resid(model.n2.ratio.SS), subset(data.n2.nooutlier, KL.cat == "SS")$amp) # Linearity (visual inspection)
 # qqmath(model.n2.ratio.SS) # Normal distribution of residuals (visual inspection for sample N > 5000)
@@ -239,32 +262,45 @@ summary(model.n2.ratio.full)
 summary(model.n2.ratio.SS)
 summary(model.n2.ratio.CP)
 
-#### emmeans 
-emmean.n2.ratio <- emmeans(model.n2.ratio.full, pairwise~ratio|KL.cat, # within group comparison: compare levels of ratio within each level of KL
-                            mode = "satterthwaite", 
+summary(model.n2.ratio.full.factor)
+summary(model.n2.ratio.SS.factor)
+summary(model.n2.ratio.CP.factor)
+
+
+#### Data for plot: emmeans & pred -----
+emmean.n2.ratio <- emmeans(model.n2.ratio.full.factor, pairwise~ratio|KL.cat, # within group comparison: compare levels of ratio within each level of KL
+                            mode = "satterthwaite",
                             lmerTest.limit = 240000)
 emmean.n2.ratio$contrasts %>% data.frame()
-data.emmean.n2.ratio <- emmean.n2.ratio$emmeans %>% data.frame() # used for plot
+data.emmean.n2.ratio <- emmean.n2.ratio$emmeans %>% 
+  data.frame() %>% 
+  mutate(ratio.num = case_when(
+    ratio == "far" ~ 3,
+    ratio == "med" ~ 2,
+    ratio == "close" ~ 1.5)) # used for plot
+
+data.n2.pred <- tibble(pred.y = predict(model.n2.ratio.full),
+                        ratio.num = data.n2$ratio.num,
+                        KL.cat = data.n2$KL.cat,
+                        time_point = data.n2$time_point,
+                        subj_num = data.n2$subj_num) %>%
+  mutate(KL.cat = factor(KL.cat, levels = c("SS", "CP")))
 
 #### plots-----
-data_plot.indi <- data.n2 %>%
-  group_by(ratio, KL.cat, subj_num, time_point) %>%
-  summarise(ind.mean_erp.n2 = mean(amp, na.rm=T)) 
-
-ggplot(data = data.emmean.n2.ratio,
-       aes(x=ratio, y=emmean, color=KL.cat, group=KL.cat)) +
-  geom_point(position=position_dodge(.3)) +
-  geom_line(position=position_dodge(.3)) +
-  geom_errorbar(aes(ymin=lower.CL, ymax=upper.CL),
-                width = .2, linewidth=.8, position=position_dodge(.3)) +
-  labs(x = "Numerical Ratio between Number Word and Quantity", y="Estimated Marginal Means of N2 Amplitude (mV)",
-       title = "Error Bars = 95% C.I.", color = "Knower-level")
-
+ggplot() + 
+  geom_smooth(data=data.n2.pred, aes(x = ratio.num, y = pred.y,
+                                      group = KL.cat, color = KL.cat), 
+              method = "lm", se = FALSE, linewidth = 1.2) +
+  geom_point(aes(x=ratio.num, y=emmean, color = KL.cat), data=data.emmean.n2.ratio, 
+             position=position_dodge(.1), size = 2) +
+  geom_errorbar(data = data.emmean.n2.ratio, aes(x = ratio.num, ymin=lower.CL, ymax=upper.CL, color = KL.cat),
+                width = .2, linewidth=.6, position=position_dodge(.1)) +
+  labs(x = "Numerical ratio", y = "Estimated marginal means of n2 amplitude (mV)", color = "CP status")
 
 ### Distance -----
 
 model.n2.distance.full <- lmerTest::lmer(amp ~ distance * KL.cat + time_point + (time_point|subj_num), # correlated slope & intercept
-                                              data = data.n2.nooutlier, REML = T)
+                                              data = data.n2, REML = T)
 
 
 #### test model assumption -----
@@ -276,9 +312,9 @@ model.n2.distance.full <- lmerTest::lmer(amp ~ distance * KL.cat + time_point + 
 
 # break down KL levels and test linear effect of distance
 model.n2.distance.SS <- lmerTest::lmer(amp ~ distance + time_point + (time_point|subj_num), # correlated slope & intercept
-                                    data = subset(data.n2.nooutlier, KL.cat == "SS"), REML = T)
+                                    data = subset(data.n2, KL.cat == "SS"), REML = T)
 model.n2.distance.CP <- lmerTest::lmer(amp ~ distance + time_point + (time_point|subj_num), # correlated slope & intercept
-                                    data = subset(data.n2.nooutlier, KL.cat == "CP"), REML = T)
+                                    data = subset(data.n2, KL.cat == "CP"), REML = T)
 #### test model assumption -----
 # plot(resid(model.n2.full), data_sample$erp.n2) # Linearity (visual inspection)
 # qqmath(model.n2.full) # Normal distribution of residuals (visual inspection for sample N > 5000)
@@ -302,30 +338,31 @@ summary(model.n2.distance.full)
 summary(model.n2.distance.SS)
 summary(model.n2.distance.CP)
 
-#### emmeans -----
-emmean.n2.distance <- emmeans(model.n2.distance.full, pairwise~distance|KL.cat, # within group comparison: compare levels of ratio within each level of KL
-                           mode = "satterthwaite", 
-                           lmerTest.limit = 240000)
-emmean.n2.distance$contrasts %>% data.frame()
-data.emmean.n2.distance <- emmean.n2.distance$emmeans %>% data.frame() # used for plot
 
+#### Data for plot: emmeans & pred -----
+emmean.n2.distance <- emmeans(model.n2.distance.full, pairwise~distance|KL.cat, # within group comparison: compare levels of distance within each level of KL
+                               mode = "satterthwaite",
+                               lmerTest.limit = 240000)
+emmean.n2.distance$contrasts %>% data.frame()
+data.emmean.n2.distance <- emmean.n2.distance$emmeans %>% 
+  data.frame()  # used for plot
+
+data.n2.pred <- tibble(pred.y = predict(model.n2.distance.full),
+                        distance = data.n2$distance,
+                        KL.cat = data.n2$KL.cat,
+                        time_point = data.n2$time_point,
+                        subj_num = data.n2$subj_num) %>%
+  mutate(KL.cat = factor(KL.cat, levels = c("SS", "CP")))
 
 #### plots-----
-
-data_plot.indi <- data.n2 %>%
-  group_by(distance, KL.cat, subj_num, time_point) %>%
-  summarise(ind.mean_erp.n2 = mean(amp, na.rm=T)) 
-
-ggplot(data = data.emmean.n2.distance,
-       aes(x=distance, y=emmean, color=KL.cat, group=KL.cat)) +
-  geom_point(position=position_dodge(.3)) +
-  geom_line(position=position_dodge(.3)) +
-  geom_errorbar(aes(ymin=lower.CL, ymax=upper.CL),
-                width = .2, linewidth=.8, position=position_dodge(.3)) +
-  labs(x = "Numerical Distance between Number Word and Quantity", y="Estimated Marginal Means of N2 Amplitude (mV)",
-       title = "Error Bars = 95% C.I.", color = "Knower-level")
-
-
-
-
+ggplot() + 
+  geom_smooth(data=data.n2.pred, aes(x = distance, y = pred.y,
+                                      group = KL.cat, color = KL.cat), 
+              method = "lm", se = FALSE, linewidth = 1.2) +
+  geom_point(aes(x=distance, y=emmean, color = KL.cat), data=data.emmean.n2.distance, 
+             position=position_dodge(.1), size = 2) +
+  geom_errorbar(data = data.emmean.n2.distance, aes(x = distance, ymin=lower.CL, ymax=upper.CL, color = KL.cat),
+                width = .2, linewidth=.6, position=position_dodge(.1)) +
+  labs(x = "Absolute distance", y = "Estimated marginal means of n2 amplitude (mV)", color = "CP status") +
+  scale_x_continuous(breaks=c(1, 2))
 
