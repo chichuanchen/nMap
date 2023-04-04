@@ -74,11 +74,13 @@ data.n1.pred <- tibble(pred.y = predict(model.n1.cardinal.full),
                        time_point = data.n1$time_point,
                        subj_num = data.n1$subj_num
                        )
+data.n1.pred.CP <- subset(data.n1.pred, KL.cat == "CP")
+data.n1.pred.SS <- subset(data.n1.pred, KL.cat == "SS")
 # Create a scatterplot with the predicted values and fixed effect variable
-p <- data.n1.pred %>%
+data.n1.pred %>%
   mutate(KL.cat = factor(KL.cat, levels = c("SS", "CP"))) %>% 
   ggplot(aes(x = cardinal, y = pred.y, color = KL.cat)) + 
-  geom_smooth(aes(group = KL.cat, color = KL.cat),  method = "lm", se = FALSE) 
+  geom_smooth(aes(group = KL.cat, color = KL.cat), method = "lm", se = FALSE, linewidth = 2) 
   
 
 ggplot(df, aes(x = random_effect_variable, y = outcome_variable)) + 
