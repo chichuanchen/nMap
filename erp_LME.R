@@ -30,7 +30,11 @@ glimpse(data.n1)
 ### Cardinal -----
 model.n1.cardinal.full <- lmerTest::lmer(amp ~ cardinal + KL.cat + cardinal:KL.cat + time_point + (time_point|subj_num), # correlated slope & intercept
                                          data = data.n1, REML = T)
-
+# cardinal as factor
+model.n1.cardinal.full.factor <- data.n1 %>%
+  mutate(cardinal = factor(cardinal)) %>%
+  lmerTest::lmer(data = ., amp ~ cardinal + KL.cat + cardinal:KL.cat + time_point + (time_point|subj_num), # correlated slope & intercept
+                                         REML = T)
 # model.n1.cardinal.SS <- lmerTest::lmer(amp ~ cardinal + time_point + (time_point|subj_num), # resulted in singular fit
 #                                      data = subset(data.n1, KL.cat == "SS"), REML = T)
 model.n1.cardinal.SS <- lmerTest::lmer(amp ~ cardinal + time_point + (1|subj_num), # random subject intercept
@@ -57,55 +61,33 @@ anova(model.n1.cardinal.CP)
 summary(model.n1.cardinal.full)
 summary(model.n1.cardinal.SS)
 summary(model.n1.cardinal.CP)
-# 
-# #### emmeans -----
-# emmean.n1.cardinal <- emmeans(model.n1.cardinal.full, pairwise~cardinal|KL.cat, # within group comparison: compare levels of ratio within each level of KL
-#                               mode = "satterthwaite", 
-#                               lmerTest.limit = 240000)
-# emmean.n1.cardinal$contrasts %>% data.frame()
-# data.emmean.n1.cardinal <- emmean.n1.cardinal$emmeans %>% data.frame() # used for plot
 
-#### plots-----
+#### Data for plot: emmeans & pred -----
+emmean.n1.cardinal <- emmeans(model.n1.cardinal.full.factor, pairwise~cardinal|KL.cat, # within group comparison: compare levels of ratio within each level of KL
+                              mode = "satterthwaite",
+                              lmerTest.limit = 240000)
+emmean.n1.cardinal$contrasts %>% data.frame()
+data.emmean.n1.cardinal <- emmean.n1.cardinal$emmeans %>% data.frame() # used for plot
 
-# Create a data frame with the predicted values from the model, also specify factor order
 data.n1.pred <- tibble(pred.y = predict(model.n1.cardinal.full),
                        cardinal = data.n1$cardinal,
                        KL.cat = data.n1$KL.cat,
                        time_point = data.n1$time_point,
-                       subj_num = data.n1$subj_num
-                       )
-data.n1.pred.CP <- subset(data.n1.pred, KL.cat == "CP")
-data.n1.pred.SS <- subset(data.n1.pred, KL.cat == "SS")
-# Create a scatterplot with the predicted values and fixed effect variable
-data.n1.pred %>%
-  mutate(KL.cat = factor(KL.cat, levels = c("SS", "CP"))) %>% 
-  ggplot(aes(x = cardinal, y = pred.y, color = KL.cat)) + 
-  geom_smooth(aes(group = KL.cat, color = KL.cat), method = "lm", se = FALSE, linewidth = 2) 
+                       subj_num = data.n1$subj_num) %>%
+  mutate(KL.cat = factor(KL.cat, levels = c("SS", "CP")),
+         cardinal = factor(cardinal))
+
+#### plots-----
+ggplot() + 
+  geom_smooth(data=data.n1.pred, aes(x = cardinal, y = pred.y,
+                                     group = KL.cat, color = KL.cat), 
+              method = "lm", se = FALSE, linewidth = 1.2) +
+  geom_point(aes(x=cardinal, y=emmean, color = KL.cat), data=data.emmean.n1.cardinal, 
+             position=position_dodge(.1), size = 2) +
+  geom_errorbar(data = data.emmean.n1.cardinal, aes(x = cardinal, ymin=lower.CL, ymax=upper.CL, color = KL.cat),
+                width = .2, linewidth=.6, position=position_dodge(.1)) +
+  labs(x = "Cardinal Values", y = "Estimated marginal means of N1 amplitude (mV)", color = "CP status")
   
-
-ggplot(df, aes(x = random_effect_variable, y = outcome_variable)) + 
-  geom_violin(trim = FALSE)
-
-# Add a separate line for each level of the random effect variable
-
-
-
-data_plot.indi <- data.n1 %>%
-  group_by(cardinal, KL.cat, subj_num, time_point) %>%
-  summarise(ind.mean_erp.n1 = mean(amp, na.rm=T)) 
-
-ggplot(data = data.emmean.n1.cardinal,
-       aes(x=cardinal, y=emmean, color=KL.cat, group=KL.cat)) +
-  geom_point(position=position_dodge(.3)) +
-  geom_line(position=position_dodge(.3)) +
-  geom_errorbar(aes(ymin=lower.CL, ymax=upper.CL),
-                width = .2, linewidth=.8, position=position_dodge(.3)) +
-  labs(x = "Cardinal Value of Visual Quantity", y="Estimated Marginal Means of N1 Amplitude (mV)",
-       title = "Error Bars = 95% C.I.", color = "Knower-level") 
-# +
-#   
-#   geom_jitter(data = data_plot.indi,
-#   aes(x=cardinal, y=ind.mean_erp.n1, shape=time_point),position=position_dodge(.9))
 
 
 ## P2p -----
