@@ -53,18 +53,40 @@ Anova(model.n1.cardinal.full, type="III")
 
 anova(model.n1.cardinal.SS)
 anova(model.n1.cardinal.CP)
+
 summary(model.n1.cardinal.full)
 summary(model.n1.cardinal.SS)
 summary(model.n1.cardinal.CP)
-
-#### emmeans -----
-emmean.n1.cardinal <- emmeans(model.n1.cardinal.full, pairwise~cardinal|KL.cat, # within group comparison: compare levels of ratio within each level of KL
-                              mode = "satterthwaite", 
-                              lmerTest.limit = 240000)
-emmean.n1.cardinal$contrasts %>% data.frame()
-data.emmean.n1.cardinal <- emmean.n1.cardinal$emmeans %>% data.frame() # used for plot
+# 
+# #### emmeans -----
+# emmean.n1.cardinal <- emmeans(model.n1.cardinal.full, pairwise~cardinal|KL.cat, # within group comparison: compare levels of ratio within each level of KL
+#                               mode = "satterthwaite", 
+#                               lmerTest.limit = 240000)
+# emmean.n1.cardinal$contrasts %>% data.frame()
+# data.emmean.n1.cardinal <- emmean.n1.cardinal$emmeans %>% data.frame() # used for plot
 
 #### plots-----
+
+# Create a data frame with the predicted values from the model, also specify factor order
+data.n1.pred <- tibble(pred.y = predict(model.n1.cardinal.full),
+                       cardinal = data.n1$cardinal,
+                       KL.cat = data.n1$KL.cat,
+                       time_point = data.n1$time_point,
+                       subj_num = data.n1$subj_num
+                       )
+# Create a scatterplot with the predicted values and fixed effect variable
+p <- data.n1.pred %>%
+  mutate(KL.cat = factor(KL.cat, levels = c("SS", "CP"))) %>% 
+  ggplot(aes(x = cardinal, y = pred.y, color = KL.cat)) + 
+  geom_smooth(aes(group = KL.cat, color = KL.cat),  method = "lm", se = FALSE) 
+  
+
+ggplot(df, aes(x = random_effect_variable, y = outcome_variable)) + 
+  geom_violin(trim = FALSE)
+
+# Add a separate line for each level of the random effect variable
+
+
 
 data_plot.indi <- data.n1 %>%
   group_by(cardinal, KL.cat, subj_num, time_point) %>%
