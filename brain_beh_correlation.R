@@ -9,8 +9,8 @@ library("emmeans") # extract estimated marginal means
 # library("MuMIn") # for calculating r squared from LMEs
 
 rm(list = ls())
-load("./ERP/tidied/erp_tidied.RData")
-load("./beh/tidied/beh_data_tidied.RData")
+load("../ERP/tidied/erp_tidied.RData")
+load("../beh/beh_data_tidied.RData")
 
 
 # calculate individual (subj_num and time_point) mean ERP amplitude for different components
@@ -43,23 +43,45 @@ bbcor_n1_beh <- full_join(indi_n1_sensitivity, beh_data.raw) %>%
   mutate(WM.c = as.vector(scale(WM, center = TRUE, scale=TRUE)),
          CONFLICT.c = as.vector(scale(CONFLICT, center = TRUE, scale=TRUE)),
          INHIBIT.c = as.vector(scale(INHIBIT, center = TRUE, scale=TRUE)),
-         VOCABRAW.c = as.vector(scale(VOCABRAW, center = TRUE, scale=TRUE))) %>%
-  drop_na(mean.sensitivity)
+         VOCAB.c = as.vector(scale(VOCAB, center = TRUE, scale=TRUE))) %>%
+  drop_na(mean.sensitivity) 
 
 
-mymodel <- lmer(mean.sensitivity ~ INHIBIT.c + WM.c + CONFLICT.c + VOCABRAW.c + (1|time_point), 
+cor.test(bbcor_n1_beh$mean.sensitivity, bbcor_n1_beh$INHIBIT, method = "pearson")
+
+
+glimpse(bbcor_n1_beh)
+
+bbcor_n1_beh.CP <- bbcor_n1_beh %>% filter(KL.cat == "CP")
+bbcor_n1_beh.SS <- bbcor_n1_beh %>% filter(KL.cat == "SS")
+
+
+ggplot(data = bbcor_n1_beh, aes(x=INHIBIT, y=mean.sensitivity)) +
+  geom_point() +
+  geom_smooth(method="lm")
+  
+
+ggplot(data = bbcor_n1_beh.SS, aes(x=INHIBIT, y=mean.sensitivity)) +
+  geom_point() +
+  geom_smooth(method="lm")
+
+mymodel <- lmer(mean.sensitivity ~ INHIBIT.c + WM.c + CONFLICT.c + (1|time_point), 
                 data=bbcor_n1_beh) # singular fit
-mymodel <- lm(mean.sensitivity ~ INHIBIT.c + WM.c + CONFLICT.c + VOCABRAW.c, 
+
+mymodel <- lm(mean.sensitivity ~ INHIBIT.c, data=bbcor_n1_beh) 
+
+mymodel <- lm(mean.sensitivity ~ INHIBIT.c + time_point , 
                 data=bbcor_n1_beh)
 
 summary(mymodel)
+
 confint(mymodel, oldNames = FALSE)
 
-mymodel.SS <- lm(mean.sensitivity ~ INHIBIT.c + WM.c + CONFLICT.c + VOCABRAW.c, 
+mymodel.SS <- lm(mean.sensitivity ~ INHIBIT.c + WM.c + CONFLICT.c, 
               data=subset(bbcor_n1_beh, KL.cat == "SS"))
 summary(mymodel.SS)
 
-mymodel.CP <- lm(mean.sensitivity ~ INHIBIT.c + WM.c + CONFLICT.c + VOCABRAW.c, 
+mymodel.CP <- lm(mean.sensitivity ~ INHIBIT.c + WM.c + CONFLICT.c, 
                  data=subset(bbcor_n1_beh, KL.cat == "CP"))
 summary(mymodel.CP)
 
@@ -85,12 +107,14 @@ bbcor_n2_beh <- full_join(indi_n2_sensitivity, beh_data.raw) %>%
   mutate(WM.c = as.vector(scale(WM, center = TRUE, scale=TRUE)),
          CONFLICT.c = as.vector(scale(CONFLICT, center = TRUE, scale=TRUE)),
          INHIBIT.c = as.vector(scale(INHIBIT, center = TRUE, scale=TRUE)),
-         VOCABRAW.c = as.vector(scale(VOCABRAW, center = TRUE, scale=TRUE))) %>%
+         VOCAB.c = as.vector(scale(VOCAB, center = TRUE, scale=TRUE))) %>%
   drop_na(mean.sensitivity)
 
 
-mymodel <- lm(mean.sensitivity ~ INHIBIT.c + WM.c + CONFLICT.c + VOCABRAW.c, 
+mymodel <- lm(mean.sensitivity ~ INHIBIT.c + WM.c + CONFLICT.c, 
                 data=bbcor_n2_beh)
+summary(mymodel)
+
 coes <- summary(mymodel)$coefficients
 
 ggplot(data=bbcor_n2_beh, aes(x=INHIBIT.c, y=mean.sensitivity)) + 
@@ -120,12 +144,13 @@ bbcor_n2_beh2 <- full_join(indi_n2_sensitivity2, beh_data.raw) %>%
   mutate(WM.c = as.vector(scale(WM, center = TRUE, scale=TRUE)),
          CONFLICT.c = as.vector(scale(CONFLICT, center = TRUE, scale=TRUE)),
          INHIBIT.c = as.vector(scale(INHIBIT, center = TRUE, scale=TRUE)),
-         VOCABRAW.c = as.vector(scale(VOCABRAW, center = TRUE, scale=TRUE))) %>%
+         VOCAB.c = as.vector(scale(VOCAB, center = TRUE, scale=TRUE))) %>%
   drop_na(mean.sensitivity)
 
 
 mymodel <- lm(mean.sensitivity ~ INHIBIT.c + WM.c + CONFLICT.c, 
               data=bbcor_n2_beh2)
+summary(mymodel)
 coes <- summary(mymodel)$coefficients
 
 ggplot(data=bbcor_n2_beh2, aes(x=INHIBIT.c, y=mean.sensitivity)) + 
