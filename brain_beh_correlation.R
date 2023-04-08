@@ -21,7 +21,7 @@ indi_n1_sensitivity <- data_erp_all %>%
   group_by(subj_num, time_point, KL.cat, cardinal) %>%
   summarise(cardinal.mean.amp = mean(amp, na.rm = T)) %>%
   group_by(subj_num, time_point, KL.cat) %>%
-  summarise(mean.sensitivity = (cardinal.mean.amp[cardinal==3]) - (cardinal.mean.amp[cardinal==1]))
+  summarise(n1.mean.sensitivity.3_1 = (cardinal.mean.amp[cardinal==3]) - (cardinal.mean.amp[cardinal==1]))
 
 # N2 sensitivity to exact numerical distance (distance 1 minus distance 2)
 indi_n2_sensitivity <- data_erp_all %>%
@@ -43,11 +43,12 @@ bbcor_n1_beh <- full_join(indi_n1_sensitivity, beh_data.raw) %>%
   mutate(WM.c = as.vector(scale(WM, center = TRUE, scale=TRUE)),
          CONFLICT.c = as.vector(scale(CONFLICT, center = TRUE, scale=TRUE)),
          INHIBIT.c = as.vector(scale(INHIBIT, center = TRUE, scale=TRUE)),
-         VOCAB.c = as.vector(scale(VOCAB, center = TRUE, scale=TRUE))) %>%
-  drop_na(mean.sensitivity) 
+         VOCAB.c = as.vector(scale(VOCAB, center = TRUE, scale=TRUE))) 
 
+corr.n1sen.inhib <- bbcor_n1_beh %>%
+  drop_na(n1.mean.sensitivity.3_1, INHIBIT)
 
-cor.test(bbcor_n1_beh$mean.sensitivity, bbcor_n1_beh$INHIBIT, method = "pearson")
+cor.test(corr.n1sen.inhib$n1.mean.sensitivity.3_1, corr.n1sen.inhib$INHIBIT, method = "pearson")
 
 
 glimpse(bbcor_n1_beh)
