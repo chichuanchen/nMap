@@ -36,7 +36,7 @@ data.tidy <- data.raw %>%
                          time_point == 2 ~ CONFLICTPOST),
     INHIBIT = case_when(time_point == 1 ~ INHIBITPRE,
                          time_point == 2 ~ INHIBITPOST),
-    VOCAB = case_when(time_point == 1 ~ VOCABRAWPRE, F ~ NA)) %>%
+    VOCAB = case_when(time_point == 1 ~ VOCABRAWPRE)) %>%
   select(!ends_with(c("PRE", "POST")))
 
 glimpse(data.tidy)
@@ -44,5 +44,5 @@ glimpse(data.tidy)
 # Save and export ----
 ## rename
 beh_data.raw <- data.tidy
-
+write.csv(beh_data.raw, file="beh_tidied.csv")
 save(beh_data.raw, file="./beh_data_tidied.RData")
