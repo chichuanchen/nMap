@@ -3,10 +3,10 @@ library("tidyverse")
 library("readxl")
 
 rm(list=ls())
-setwd(dir="../data/ERP/raw_data")
+setwd(dir="../ERP/raw_data/reprocessed040823")
 
 # read in raw data (provided by Dan) in preparation of constructing LME models -----
-data_N2_P2p_375_475 <- read_csv("RATIO_medAD_P2indtrialdata.csv", col_names = F) %>%
+data_N2_P2p_375_475 <- read_csv("RATIO_medAD_P2indtrialdata040823.csv", col_names = F) %>%
   rename(subj_num = X1, # rename header according to readme_RATIO_medAD_P2indtrialdata.txt
          KL.cont = X2,
          cond = X3,
@@ -14,7 +14,7 @@ data_N2_P2p_375_475 <- read_csv("RATIO_medAD_P2indtrialdata.csv", col_names = F)
          erp.n2 = X5,
          time_point = X6) 
 
-data_N1_P2a <- read_csv("RATIO_medAD_N1indtrialdata.csv", col_names = F) %>%
+data_N1_P2a <- read_csv("RATIO_medAD_N1indtrialdata040823.csv", col_names = F) %>%
   rename(subj_num = X1, # rename header according to readme_RATIO_medAD_N1indtrialdata.txt
          KL.cont = X2,
          cond = X3,
@@ -44,6 +44,6 @@ data_erp_all <- full_join(data_N2_P2p_375_475, data_N1_P2a, by = c("subj_num", "
 
 # Save and export ----
 
-save(data_erp_all, file="../tidied/erp_tidied.RData")
+save(data_erp_all, file="../../tidied/erp_tidied.RData")
 
 _
