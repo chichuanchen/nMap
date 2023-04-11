@@ -48,7 +48,13 @@ bbcor_n1_beh <- full_join(indi_n1_sensitivity, beh_data.raw) %>%
 corr.n1sen.inhib <- bbcor_n1_beh %>%
   drop_na(n1.mean.sensitivity.3_1, INHIBIT)
 
+write.csv(corr.n1sen.inhib, "./../data/corr.n1sen.inhib.csv")
+
+corr.n1sen.WM <- bbcor_n1_beh %>%
+  drop_na(n1.mean.sensitivity.3_1, WM)
+
 cor.test(corr.n1sen.inhib$n1.mean.sensitivity.3_1, corr.n1sen.inhib$INHIBIT, method = "pearson")
+cor.test(corr.n1sen.WM$n1.mean.sensitivity.3_1, corr.n1sen.WM$WM, method = "pearson")
 
 
 glimpse(bbcor_n1_beh)
@@ -57,21 +63,21 @@ bbcor_n1_beh.CP <- bbcor_n1_beh %>% filter(KL.cat == "CP")
 bbcor_n1_beh.SS <- bbcor_n1_beh %>% filter(KL.cat == "SS")
 
 
-ggplot(data = bbcor_n1_beh, aes(x=INHIBIT, y=mean.sensitivity)) +
+ggplot(data = bbcor_n1_beh, aes(x=INHIBIT, y=n1.mean.sensitivity.3_1)) +
   geom_point() +
   geom_smooth(method="lm")
   
 
-ggplot(data = bbcor_n1_beh.SS, aes(x=INHIBIT, y=mean.sensitivity)) +
+ggplot(data = bbcor_n1_beh.SS, aes(x=INHIBIT, y=n1.mean.sensitivity.3_1)) +
   geom_point() +
   geom_smooth(method="lm")
 
-mymodel <- lmer(mean.sensitivity ~ INHIBIT.c + WM.c + CONFLICT.c + (1|time_point), 
+mymodel <- lmer(n1.mean.sensitivity.3_1 ~ INHIBIT.c + WM.c + CONFLICT.c + (1|time_point), 
                 data=bbcor_n1_beh) # singular fit
 
-mymodel <- lm(mean.sensitivity ~ INHIBIT.c, data=bbcor_n1_beh) 
+mymodel <- lm(n1.mean.sensitivity.3_1 ~ INHIBIT.c, data=bbcor_n1_beh) 
 
-mymodel <- lm(mean.sensitivity ~ INHIBIT.c + time_point , 
+mymodel <- lm(n1.mean.sensitivity.3_1 ~ INHIBIT.c + time_point , 
                 data=bbcor_n1_beh)
 
 summary(mymodel)
@@ -110,6 +116,8 @@ bbcor_n2_beh <- full_join(indi_n2_sensitivity, beh_data.raw) %>%
          INHIBIT.c = as.vector(scale(INHIBIT, center = TRUE, scale=TRUE)),
          VOCAB.c = as.vector(scale(VOCAB, center = TRUE, scale=TRUE))) %>%
   drop_na(mean.sensitivity)
+
+cor.test(bbcor_n2_beh$mean.sensitivity, bbcor_n2_beh$INHIBIT, method = "pearson")
 
 
 mymodel <- lm(mean.sensitivity ~ INHIBIT.c + WM.c + CONFLICT.c, 
