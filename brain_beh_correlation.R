@@ -9,8 +9,8 @@ library("emmeans") # extract estimated marginal means
 # library("MuMIn") # for calculating r squared from LMEs
 
 rm(list = ls())
-load("../ERP/tidied/erp_tidied.RData")
-load("../beh/beh_data_tidied.RData")
+load("../data/ERP/tidied/erp_tidied.RData")
+load("../data/beh/beh_data_tidied.RData")
 
 
 # calculate individual (subj_num and time_point) mean ERP amplitude for different components

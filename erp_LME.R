@@ -28,7 +28,7 @@ glimpse(data_erp_all)
 data.n1 <- data_erp_all %>% filter(component == "n1")
 glimpse(data.n1)
 ### Cardinal -----
-model.n1.cardinal.full <- lmerTest::lmer(amp ~ cardinal + KL.cat + cardinal:KL.cat + time_point + (time_point|subj_num), # correlated slope & intercept
+model.n1.cardinal.full <- lmerTest::lmer(amp ~ cardinal + KL.cat + cardinal:KL.cat + time_point + (1|subj_num), # correlated slope & intercept
                                          data = data.n1, REML = T)
 # cardinal as factor
 model.n1.cardinal.full.factor <- data.n1 %>%
