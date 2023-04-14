@@ -10,18 +10,21 @@ library("emmeans") # extract estimated marginal means
 
 rm(list = ls())
 load("../../tidied/erp_tidied.RData")
+load("../../tidied/DAN_erp_tidied.RData")
 load("../../../beh/beh_data_tidied.RData")
 
 
 # calculate individual (subj_num and time_point) mean ERP amplitude for different components
 # N1 sensitivity to visual quantity 3 - 1 (= far - close)
-indi_n1_sensitivity <- data_erp_all %>%
+indi_n1_sensitivity2 <- data_erp_all %>%
   filter(component == "n1") %>%
-  mutate(KL.cat = if_else(KL.cont < 5, "SS", "CP")) %>%
-  group_by(subj_num, time_point, KL.cat, cond) %>%
-  mutate(cond.mean.amp = mean(amp, na.rm = T)) %>%
+  mutate(KL.cat = if_else(KL.cont %in% c(1:4), "SS", 
+                          if_else(KL.cont %in% c(5:8), "CP", NA))) %>%
+  # group_by(subj_num, time_point, cond) %>%
+  # mutate(cond.mean.amp = mean(amp)) %>%
+  # distinct(subj_num, time_point, KL.cat, cardinal, cond.mean.amp) %>%
   group_by(subj_num, time_point, KL.cat, cardinal) %>%
-  summarise(cardinal.mean.amp = mean(cond.mean.amp, na.rm = T)) %>%
+  summarise(cardinal.mean.amp = mean(amp, na.rm = T)) %>%
 
   summarise(n1.mean.sensitivity.3_1 = (cardinal.mean.amp[cardinal==3]) - (cardinal.mean.amp[cardinal==1]))
 
@@ -37,7 +40,7 @@ indi_n2_sensitivity <- data_erp_all %>%
               (distance.mean.amp[distance=="2"]))
 
 # combine erp and beh info
-bbcor_n1_beh <- full_join(indi_n1_sensitivity, beh_data.raw) %>%
+bbcor_n1_beh <- full_join(indi_n1_sensitivity2, beh_data.raw) %>%
   mutate(subj_num = factor(subj_num),
          time_point = factor(time_point),
          KL.cat = factor(KL.cat)) %>%
@@ -50,7 +53,7 @@ bbcor_n1_beh <- full_join(indi_n1_sensitivity, beh_data.raw) %>%
 corr.n1sen.inhib <- bbcor_n1_beh %>%
   drop_na(n1.mean.sensitivity.3_1, INHIBIT)
 
-write.csv(corr.n1sen.inhib, "./../corr.n1sen.inhib2.csv")
+write.csv(corr.n1sen.inhib, "./../corr.n1sen.inhib_0413.csv")
 
 corr.n1sen.WM <- bbcor_n1_beh %>%
   drop_na(n1.mean.sensitivity.3_1, WM)
