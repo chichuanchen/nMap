@@ -9,8 +9,8 @@ library("emmeans") # extract estimated marginal means
 # library("MuMIn") # for calculating r squared from LMEs
 
 rm(list = ls())
-load("../data/ERP/tidied/erp_tidied.RData")
-load("../data/beh/beh_data_tidied.RData")
+load("../../tidied/erp_tidied.RData")
+load("../../../beh/beh_data_tidied.RData")
 
 
 # calculate individual (subj_num and time_point) mean ERP amplitude for different components
@@ -18,9 +18,11 @@ load("../data/beh/beh_data_tidied.RData")
 indi_n1_sensitivity <- data_erp_all %>%
   filter(component == "n1") %>%
   mutate(KL.cat = if_else(KL.cont < 5, "SS", "CP")) %>%
+  group_by(subj_num, time_point, KL.cat, cond) %>%
+  mutate(cond.mean.amp = mean(amp, na.rm = T)) %>%
   group_by(subj_num, time_point, KL.cat, cardinal) %>%
-  summarise(cardinal.mean.amp = mean(amp, na.rm = T)) %>%
-  group_by(subj_num, time_point, KL.cat) %>%
+  summarise(cardinal.mean.amp = mean(cond.mean.amp, na.rm = T)) %>%
+
   summarise(n1.mean.sensitivity.3_1 = (cardinal.mean.amp[cardinal==3]) - (cardinal.mean.amp[cardinal==1]))
 
 # N2 sensitivity to exact numerical distance (distance 1 minus distance 2)
@@ -48,7 +50,7 @@ bbcor_n1_beh <- full_join(indi_n1_sensitivity, beh_data.raw) %>%
 corr.n1sen.inhib <- bbcor_n1_beh %>%
   drop_na(n1.mean.sensitivity.3_1, INHIBIT)
 
-write.csv(corr.n1sen.inhib, "./../data/corr.n1sen.inhib.csv")
+write.csv(corr.n1sen.inhib, "./../corr.n1sen.inhib2.csv")
 
 corr.n1sen.WM <- bbcor_n1_beh %>%
   drop_na(n1.mean.sensitivity.3_1, WM)
