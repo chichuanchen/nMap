@@ -8,12 +8,13 @@ library("car") # leveneTest
 library("emmeans") # extract estimated marginal means
 
 rm(list = ls())
-load("../data/ERP/tidied/erp_tidied.RData")
+load("../../tidied/erp_tidied.RData")
 
 # test
 # Explicit Data type -----
 data_erp_all <- data_erp_all %>%
-  mutate(KL.cat = factor(if_else(KL.cont %in% c(1:4), "SS", "CP")))
+  mutate(KL.cat = factor(if_else(KL.cont %in% c(1:4), "SS", 
+                                 if_else(KL.cont %in% c(5:8), "CP", NA))))
 data_erp_all$subj_num <- as.factor(data_erp_all$subj_num)
 data_erp_all$time_point <- as.factor(data_erp_all$time_point)
 
@@ -25,22 +26,29 @@ glimpse(data_erp_all)
 
 # FIT LME MODEL -----
 ## N1 -----
-data.n1 <- data_erp_all %>% filter(component == "n1")
+data.n1 <- data_erp_all %>% 
+  filter(component == "n1") %>%
+  group_by(subj_num, time_point, cond) %>% # each subject has 6 values, each for a condition
+  mutate(cond.mean.amp = mean(amp)) %>%
+  distinct(subj_num, time_point, KL.cat, cardinal, cond.mean.amp)
+  # group_by(subj_num, time_point, KL.cat, cardinal) %>%
+  # summarise(cardinal.mean.amp = mean(cond.mean.amp)) 
+  
 glimpse(data.n1)
 ### Cardinal -----
-model.n1.cardinal.full <- lmerTest::lmer(amp ~ cardinal + KL.cat + cardinal:KL.cat + time_point + (1|subj_num), # correlated slope & intercept
+model.n1.cardinal.full <- lmerTest::lmer(cond.mean.amp ~ cardinal + KL.cat + cardinal:KL.cat + time_point + (1|subj_num), # correlated slope & intercept
                                          data = data.n1, REML = T)
 # cardinal as factor
 model.n1.cardinal.full.factor <- data.n1 %>%
   mutate(cardinal = factor(cardinal)) %>%
-  lmerTest::lmer(data = ., amp ~ cardinal + KL.cat + cardinal:KL.cat + time_point + (time_point|subj_num), # correlated slope & intercept
+  lmerTest::lmer(data = ., cond.mean.amp ~ cardinal + KL.cat + cardinal:KL.cat + time_point + (1|subj_num), # correlated slope & intercept
                                          REML = T)
-# model.n1.cardinal.SS <- lmerTest::lmer(amp ~ cardinal + time_point + (time_point|subj_num), # resulted in singular fit
+# model.n1.cardinal.SS <- lmerTest::lmer(cond.mean.amp ~ cardinal + time_point + (time_point|subj_num), # resulted in singular fit
 #                                      data = subset(data.n1, KL.cat == "SS"), REML = T)
-model.n1.cardinal.SS <- lmerTest::lmer(amp ~ cardinal + time_point + (1|subj_num), # random subject intercept
+model.n1.cardinal.SS <- lmerTest::lmer(cond.mean.amp ~ cardinal + time_point + (1|subj_num), # random subject intercept
                                        data = subset(data.n1, KL.cat == "SS"), REML = T)
 
-model.n1.cardinal.CP <- lmerTest::lmer(amp ~ cardinal + time_point + (1|subj_num), # random subject intercept
+model.n1.cardinal.CP <- lmerTest::lmer(cond.mean.amp ~ cardinal + time_point + (1|subj_num), # random subject intercept
                                      data = subset(data.n1, KL.cat == "CP"), REML = T)
 #### test model assumption -----
 # plot(resid(model.n1.cardinal.full), data.n1$amp) # Linearity (visual inspection)
@@ -52,15 +60,15 @@ ranova(model.n1.cardinal.full)
 ranova(model.n1.cardinal.SS)
 ranova(model.n1.cardinal.CP)
 
-anova(model.n1.cardinal.full)
-Anova(model.n1.cardinal.full, type="III")
+# anova(model.n1.cardinal.full)
+# Anova(model.n1.cardinal.full, type="III")
+# 
+# anova(model.n1.cardinal.SS)
+# anova(model.n1.cardinal.CP)
 
-anova(model.n1.cardinal.SS)
-anova(model.n1.cardinal.CP)
-
-summary(model.n1.cardinal.full)
-summary(model.n1.cardinal.SS)
-summary(model.n1.cardinal.CP)
+summary(model.n1.cardinal.full) # significant cardinal effect
+summary(model.n1.cardinal.SS) # significant cardinal effect
+summary(model.n1.cardinal.CP) # significant cardinal effect
 
 #### Data for plot: emmeans & pred -----
 emmean.n1.cardinal <- emmeans(model.n1.cardinal.full.factor, pairwise~cardinal|KL.cat, # within group comparison: compare levels of ratio within each level of KL
@@ -219,8 +227,20 @@ data.n2 <- data_erp_all %>% filter(component == "n2") %>%
     ratio == "far" ~ 3,
     ratio == "med" ~ 2,
     ratio == "close" ~ 1.5
-  ))
+  )) %>%
+  group_by(subj_num, time_point, cond) %>%
+  mutate(cond.mean.amp = mean(amp)) %>%
+  distinct(subj_num, time_point, KL.cat, ratio.num, cond.mean.amp) 
 glimpse(data.n2)
+
+#
+data.n12 <- data_erp_all %>% 
+  filter(component == "n1") %>%
+  group_by(subj_num, time_point, cond) %>%
+  mutate(cond.mean.amp = mean(amp)) %>%
+  distinct(subj_num, time_point, KL.cat, cardinal, cond.mean.amp) 
+#
+
 
 data.n2.nooutlier <- data.n2 %>% filter(!amp < -100)
 ### Ratio -----
@@ -235,9 +255,9 @@ model.n2.ratio.full <- lmerTest::lmer(amp ~ ratio.num * KL.cat + time_point + (t
 
 # break down KL levels and test linear effect of ratio
 
-model.n2.ratio.SS <- lmerTest::lmer(amp ~ ratio.num + time_point + (time_point|subj_num), # correlated slope & intercept
+model.n2.ratio.SS <- lmerTest::lmer(cond.mean.amp ~ ratio.num + time_point + (time_point|subj_num), # correlated slope & intercept
                                      data = subset(data.n2, KL.cat == "SS"), REML = T)
-model.n2.ratio.CP <- lmerTest::lmer(amp ~ ratio.num + time_point + (time_point|subj_num), # correlated slope & intercept
+model.n2.ratio.CP <- lmerTest::lmer(cond.mean.amp ~ ratio.num + time_point + (time_point|subj_num), # correlated slope & intercept
                                      data = subset(data.n2, KL.cat == "CP"), REML = T)
 
 model.n2.ratio.SS.factor <- lmerTest::lmer(amp ~ ratio + time_point + (time_point|subj_num), # correlated slope & intercept
@@ -299,7 +319,18 @@ ggplot() +
 
 ### Distance -----
 
-model.n2.distance.full <- lmerTest::lmer(amp ~ distance * KL.cat + time_point + (time_point|subj_num), # correlated slope & intercept
+data.n2 <- data_erp_all %>% filter(component == "n2") %>%
+  mutate(ratio.num = case_when(
+    ratio == "far" ~ 3,
+    ratio == "med" ~ 2,
+    ratio == "close" ~ 1.5
+  )) %>%
+  group_by(subj_num, time_point, cond) %>%
+  mutate(cond.mean.amp = mean(amp)) %>%
+  distinct(subj_num, time_point, KL.cat, distance, cond.mean.amp) 
+glimpse(data.n2)
+
+model.n2.distance.full <- lmerTest::lmer(cond.mean.amp ~ distance * KL.cat + time_point + (time_point|subj_num), # correlated slope & intercept
                                               data = data.n2, REML = T)
 
 
@@ -311,9 +342,9 @@ model.n2.distance.full <- lmerTest::lmer(amp ~ distance * KL.cat + time_point + 
 # boxplot(data=data.n2, amp ~ distance)
 
 # break down KL levels and test linear effect of distance
-model.n2.distance.SS <- lmerTest::lmer(amp ~ distance + time_point + (time_point|subj_num), # correlated slope & intercept
+model.n2.distance.SS <- lmerTest::lmer(cond.mean.amp ~ distance + time_point + (time_point|subj_num), # correlated slope & intercept
                                     data = subset(data.n2, KL.cat == "SS"), REML = T)
-model.n2.distance.CP <- lmerTest::lmer(amp ~ distance + time_point + (time_point|subj_num), # correlated slope & intercept
+model.n2.distance.CP <- lmerTest::lmer(cond.mean.amp ~ distance + time_point + (time_point|subj_num), # correlated slope & intercept
                                     data = subset(data.n2, KL.cat == "CP"), REML = T)
 #### test model assumption -----
 # plot(resid(model.n2.full), data_sample$erp.n2) # Linearity (visual inspection)
