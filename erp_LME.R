@@ -6,15 +6,21 @@ library("lmerTest")
 library("lattice") # used for visual inspection of normal distribution of residuals
 library("car") # leveneTest
 library("emmeans") # extract estimated marginal means
+library("langcog") # for non-paramatric bootstrap CI
 
 rm(list = ls())
-load("../../tidied/erp_tidied.RData")
+load("./data/ERP/tidied/erp_tidied.RData")
 
-# test
+theme_set(theme_bw())
+
 # Explicit Data type -----
 data_erp_all <- data_erp_all %>%
-  mutate(KL.cat = factor(if_else(KL.cont %in% c(1:4), "SS", 
-                                 if_else(KL.cont %in% c(5:8), "CP", NA))))
+  mutate(KL.cat = 
+           case_when(
+             KL.cont %in% c(1:4) ~ "SS",
+             KL.cont %in% c(5:8) ~ "CP",
+             TRUE ~ as.character(NA)))
+         
 data_erp_all$subj_num <- as.factor(data_erp_all$subj_num)
 data_erp_all$time_point <- as.factor(data_erp_all$time_point)
 
@@ -27,29 +33,24 @@ glimpse(data_erp_all)
 # FIT LME MODEL -----
 ## N1 -----
 data.n1 <- data_erp_all %>% 
-  filter(component == "n1") %>%
-  group_by(subj_num, time_point, cond) %>% # each subject has 6 values, each for a condition
-  mutate(cond.mean.amp = mean(amp)) %>%
-  distinct(subj_num, time_point, KL.cat, cardinal, cond.mean.amp)
-  # group_by(subj_num, time_point, KL.cat, cardinal) %>%
-  # summarise(cardinal.mean.amp = mean(cond.mean.amp)) 
+  filter(component == "n1") 
   
 glimpse(data.n1)
 ### Cardinal -----
-model.n1.cardinal.full <- lmerTest::lmer(cond.mean.amp ~ cardinal + KL.cat + cardinal:KL.cat + time_point + (1|subj_num), # correlated slope & intercept
+model.n1.cardinal.full <- lmerTest::lmer(amp ~ cardinal + KL.cat + cardinal:KL.cat + time_point + (1|subj_num), # correlated slope & intercept
                                          data = data.n1, REML = T)
 # cardinal as factor
 model.n1.cardinal.full.factor <- data.n1 %>%
   mutate(cardinal = factor(cardinal)) %>%
-  lmerTest::lmer(data = ., cond.mean.amp ~ cardinal + KL.cat + cardinal:KL.cat + time_point + (1|subj_num), # correlated slope & intercept
+  lmerTest::lmer(data = ., amp ~ cardinal + KL.cat + cardinal:KL.cat + time_point + (1|subj_num), # correlated slope & intercept
                                          REML = T)
 # model.n1.cardinal.SS <- lmerTest::lmer(cond.mean.amp ~ cardinal + time_point + (time_point|subj_num), # resulted in singular fit
 #                                      data = subset(data.n1, KL.cat == "SS"), REML = T)
-model.n1.cardinal.SS <- lmerTest::lmer(cond.mean.amp ~ cardinal + time_point + (1|subj_num), # random subject intercept
+model.n1.cardinal.SS <- lmerTest::lmer(amp ~ cardinal + time_point + (1|subj_num), # random subject intercept
                                        data = subset(data.n1, KL.cat == "SS"), REML = T)
 
-model.n1.cardinal.CP <- lmerTest::lmer(cond.mean.amp ~ cardinal + time_point + (1|subj_num), # random subject intercept
-                                     data = subset(data.n1, KL.cat == "CP"), REML = T)
+model.n1.cardinal.CP <- lmerTest::lmer(amp ~ cardinal + time_point + (1|subj_num), # random subject intercept
+                                       data = subset(data.n1, KL.cat == "CP"), REML = T)
 #### test model assumption -----
 # plot(resid(model.n1.cardinal.full), data.n1$amp) # Linearity (visual inspection)
 # qqmath(model.n1.cardinal.full) # Normal distribution of residuals (visual inspection for sample N > 5000)
@@ -60,43 +61,44 @@ ranova(model.n1.cardinal.full)
 ranova(model.n1.cardinal.SS)
 ranova(model.n1.cardinal.CP)
 
-# anova(model.n1.cardinal.full)
-# Anova(model.n1.cardinal.full, type="III")
-# 
-# anova(model.n1.cardinal.SS)
-# anova(model.n1.cardinal.CP)
-
 summary(model.n1.cardinal.full) # significant cardinal effect
 summary(model.n1.cardinal.SS) # significant cardinal effect
 summary(model.n1.cardinal.CP) # significant cardinal effect
 
-#### Data for plot: emmeans & pred -----
-emmean.n1.cardinal <- emmeans(model.n1.cardinal.full.factor, pairwise~cardinal|KL.cat, # within group comparison: compare levels of ratio within each level of KL
-                              mode = "satterthwaite",
-                              lmerTest.limit = 240000)
-emmean.n1.cardinal$contrasts %>% data.frame()
-data.emmean.n1.cardinal <- emmean.n1.cardinal$emmeans %>% data.frame() # used for plot
+# #### Data for plot: emmeans & pred -----
+# emmean.n1.cardinal <- emmeans(model.n1.cardinal.full.factor, pairwise~cardinal|KL.cat, # within group comparison: compare levels of ratio within each level of KL
+#                               mode = "satterthwaite",
+#                               lmerTest.limit = 240000)
+# emmean.n1.cardinal$contrasts %>% data.frame()
+# data.emmean.n1.cardinal <- emmean.n1.cardinal$emmeans %>% data.frame() # used for plot
 
-data.n1.pred <- tibble(pred.y = predict(model.n1.cardinal.full),
-                       cardinal = data.n1$cardinal,
-                       KL.cat = data.n1$KL.cat,
-                       time_point = data.n1$time_point,
-                       subj_num = data.n1$subj_num) %>%
-  mutate(KL.cat = factor(KL.cat, levels = c("SS", "CP")),
-         cardinal = factor(cardinal))
+# data.n1.pred <- tibble(pred.y = predict(model.n1.cardinal.full),
+#                        cardinal = data.n1$cardinal,
+#                        KL.cat = data.n1$KL.cat,
+#                        time_point = data.n1$time_point,
+#                        subj_num = data.n1$subj_num) %>%
+#   mutate(KL.cat = factor(KL.cat, levels = c("SS", "CP")),
+#          cardinal = factor(cardinal))
 
 #### plots-----
-ggplot() + 
-  geom_smooth(data=data.n1.pred, aes(x = cardinal, y = pred.y,
-                                     group = KL.cat, color = KL.cat), 
-              method = "lm", se = FALSE, linewidth = 1.2) +
-  geom_point(aes(x=cardinal, y=emmean, color = KL.cat), data=data.emmean.n1.cardinal, 
-             position=position_dodge(.1), size = 2) +
-  geom_errorbar(data = data.emmean.n1.cardinal, aes(x = cardinal, ymin=lower.CL, ymax=upper.CL, color = KL.cat),
-                width = .2, linewidth=.6, position=position_dodge(.1)) +
-  labs(x = "Cardinal Values", y = "Estimated marginal means of N1 amplitude (mV)", color = "CP status")
+# ggplot(data = data.emmean.n1.cardinal, aes(x=cardinal, y=emmean, color = KL.cat, group = KL.cat)) + 
+#   geom_point(position=position_dodge(.1), size = 2) +
+#   geom_line() +
+#   geom_errorbar(aes(x = cardinal, ymin=lower.CL, ymax=upper.CL, color = KL.cat),
+#                 width = .2, linewidth=.6, position=position_dodge(.1)) +
+#   labs(x = "Visual Cardinal Values", y = "Estimated marginal means of N1 amplitude (mV)", color = "CP status")
   
-
+data.n1 %>%
+  mutate(cardinal = factor(cardinal)) %>%
+  group_by(cardinal, KL.cat) %>%
+  multi_boot_standard("amp") %>%
+  drop_na() %>%
+  ggplot(aes(x=cardinal, y=mean, group=KL.cat, color=KL.cat)) +
+  geom_point(position=position_dodge(.1), size = 2.5) + 
+  geom_line(position=position_dodge(.1), linewidth=.8) +
+  geom_errorbar(aes(ymin = ci_lower, ymax = ci_upper),
+                 position=position_dodge(.1), width=.2, linewidth=.6) +
+  labs(x = "Visual Cardinal Values", y = "Estimated marginal means of N1 amplitude (mV)", color = "CP status")
 
 ## P2p -----
 data.p2p <- data_erp_all %>% filter(component == "p2p") %>%
