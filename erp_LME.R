@@ -29,6 +29,11 @@ data_erp_all$distance <- as.numeric(data_erp_all$distance)
 
 glimpse(data_erp_all)
 
+# Data summarization -----
+
+# number of unique subjects
+length(unique(data_erp_all$subj_num))
+data_erp_all %>% distinct(subj_num, time_point) %>% group_by(subj_num) %>% summarise(nT=n()) %>% group_by(nT) %>% summarise(n=n())
 
 # FIT LME MODEL -----
 ## N1 -----
