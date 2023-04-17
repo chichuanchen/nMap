@@ -9,7 +9,7 @@ library("emmeans") # extract estimated marginal means
 library("langcog") # for non-paramatric bootstrap CI
 
 rm(list = ls())
-load("./data/ERP/tidied/erp_tidied.RData")
+load("../data/ERP/tidied/erp_tidied.RData")
 
 theme_set(theme_bw())
 
@@ -258,6 +258,28 @@ data.n2 <- data_erp_all %>% filter(component == "n2") %>%
 glimpse(data.n2)
 
 #
+
+model.n2. <- lmerTest::lmer(amp ~ distance + ratio.num + KL.cat + distance:KL.cat + ratio.num:KL.cat  + time_point + (time_point|subj_num), # correlated slope & intercept
+                                         data = data.n2, REML = T)
+model.n2.noKLmain <- lmerTest::lmer(amp ~ distance + ratio.num + distance:KL.cat + ratio.num:KL.cat  + time_point + (time_point|subj_num), # correlated slope & intercept
+                            data = data.n2, REML = T)
+model.n2.CP <- lmerTest::lmer(amp ~ distance + ratio.num + time_point + (time_point|subj_num), # correlated slope & intercept
+                            data = subset(data.n2, KL.cat == "CP"), REML = T)
+
+model.n2.SS <- lmerTest::lmer(amp ~ distance + ratio.num + time_point + (time_point|subj_num), # correlated slope & intercept
+                            data = subset(data.n2, KL.cat == "SS"), REML = T)
+
+model.n2.reducedistance <- lmerTest::lmer(amp ~ ratio.num + KL.cat + time_point + (time_point|subj_num), # correlated slope & intercept
+                            data = data.n2, REML = T)
+model.n2.reduceratio <- lmerTest::lmer(amp ~ distance + KL.cat + time_point + (time_point|subj_num), # correlated slope & intercept
+                                          data = data.n2, REML = T)
+summary(model.n2.)
+summary(model.n2.CP)
+summary(model.n2.SS)
+
+summary(model.n2.reducedistance)
+summary(model.n2.reduceratio)
+anova(model.n2., model.n2.noKLmain)
 
 data.n2.nooutlier <- data.n2 %>% filter(!amp < -100)
 ### Ratio -----
