@@ -26,11 +26,9 @@ data.raw <- read_excel("newseg_medAD_4.5.23.xlsx") %>%
 
 # tidy - 
 data.tidy <- data.raw %>%
-  mutate(WMPOST = parse_number(WMPOST))
-  str_extract(WMPOST,"\\[[^]]*\\]")
-  mutate(WMPOST = as.numeric(WMPOST), # automatically turn non-numeric into NA
-         CONFLICTPOST = as.numeric(CONFLICTPOST),
-         INHIBITPOST = as.numeric(INHIBITPOST)) %>%
+  mutate(WMPOST = parse_number(WMPOST), # automatically turn non-numeric into NA
+         CONFLICTPOST = parse_number(CONFLICTPOST),
+         INHIBITPOST = parse_number(INHIBITPOST)) %>%
   mutate(
     WM = case_when(time_point == 1 ~ WMPRE,
                    time_point == 2 ~ WMPOST),
@@ -39,7 +37,7 @@ data.tidy <- data.raw %>%
     INHIBIT = case_when(time_point == 1 ~ INHIBITPRE,
                          time_point == 2 ~ INHIBITPOST),
     VOCAB = case_when(time_point == 1 ~ VOCABRAWPRE)) %>%
-  select(!ends_with(c("PRE", "POST")))
+  select(!ends_with(c("PRE", "POST")), AGEPRE)
 
 glimpse(data.tidy)
 
