@@ -33,7 +33,21 @@ glimpse(data_erp_all)
 
 # number of unique subjects
 length(unique(data_erp_all$subj_num))
-data_erp_all %>% distinct(subj_num, time_point) %>% group_by(subj_num) %>% summarise(nT=n()) %>% group_by(nT) %>% summarise(n=n())
+
+# number of sessions
+data_erp_all %>% 
+  distinct(subj_num, time_point) %>% 
+  group_by(subj_num) %>% 
+  summarise(nT=n()) %>% 
+  group_by(nT) %>% 
+  summarise(n=n())
+
+# number of SS and CP knowers
+data_erp_all %>% 
+  group_by(subj_num, time_point, KL.cat) %>% 
+  summarise(nT=n()) %>% 
+  group_by(KL.cat) %>% 
+  summarise(n=n())
 
 # FIT LME MODEL -----
 ## N1 -----

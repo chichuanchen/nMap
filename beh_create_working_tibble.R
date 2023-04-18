@@ -26,6 +26,8 @@ data.raw <- read_excel("newseg_medAD_4.5.23.xlsx") %>%
 
 # tidy - 
 data.tidy <- data.raw %>%
+  mutate(WMPOST = parse_number(WMPOST))
+  str_extract(WMPOST,"\\[[^]]*\\]")
   mutate(WMPOST = as.numeric(WMPOST), # automatically turn non-numeric into NA
          CONFLICTPOST = as.numeric(CONFLICTPOST),
          INHIBITPOST = as.numeric(INHIBITPOST)) %>%

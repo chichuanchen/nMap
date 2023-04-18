@@ -9,7 +9,7 @@ library("tidyverse")
 library("readxl")
 
 rm(list=ls())
-setwd(dir="../data/beh")
+setwd(dir="../data/ERPbeh")
 
 # # filter data using this list of subjects
 # data.subjlist <- read_csv("BEHAVIORAL_ERPGOOD_SUBLIST.csv", col_names = T) %>%
@@ -23,7 +23,7 @@ my_vars <- c("Subject", "Session", "Trial", "image[SubTrial]", "sound1[SubTrial]
 
 # prep pre and post data sets
 data.pre <- read_csv("nmap_merged_PRE.csv", col_names = T) %>%
-  select(my_vars) %>%
+  select(all_of(my_vars)) %>%
   rename(stim.image = `image[SubTrial]`,
          stim.sound = `sound1[SubTrial]`) %>%
   filter(Session == 1) %>% # make sure all observations are from session 1

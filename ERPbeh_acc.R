@@ -4,7 +4,7 @@ library("car")
 
 
 rm(list = ls())
-load("./tidied/nmap_data_tidied.RData") 
+load("../data/ERPbeh/tidied/nmap_data_tidied.RData") 
 
 # wide format acc already calculated in a tibble, now output
 write.csv(nmap_acc.wide, file = "acc_subj_6cond_wide.csv", row.names = FALSE)
