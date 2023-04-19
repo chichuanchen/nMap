@@ -9,8 +9,8 @@ library("emmeans") # extract estimated marginal means
 # library("MuMIn") # for calculating r squared from LMEs
 
 rm(list = ls())
-load("./data/ERP/tidied/erp_tidied.RData")
-load("./data/beh/beh_data_tidied.RData")
+load("../data/ERP/tidied/erp_tidied.RData")
+load("../data/beh/beh_data_tidied.RData")
 
 #
 data_erp_all <- data_erp_all %>%
@@ -22,14 +22,14 @@ data_erp_all <- data_erp_all %>%
 
 # calculate individual (subj_num and time_point) mean ERP amplitude for different components
 # N1 sensitivity to visual quantity 3 - 1 (= far - close)
-indi_n1_sensitivity2 <- data_erp_all %>%
+indi_n1_sensitivity <- data_erp_all %>%
   filter(component == "n1") %>%
   group_by(subj_num, time_point, KL.cat, cardinal) %>%
   summarise(cardinal.mean.amp = mean(amp)) %>%
   summarise(n1.mean.sensitivity.3_1 = (cardinal.mean.amp[cardinal==3]) - (cardinal.mean.amp[cardinal==1]))
 
 # combine erp and beh info
-bbcor_n1_beh <- full_join(indi_n1_sensitivity2, beh_data.raw) %>%
+bbcor_n1_beh <- full_join(indi_n1_sensitivity, beh_data.raw) %>%
   mutate(subj_num = factor(subj_num),
          time_point = factor(time_point),
          KL.cat = factor(KL.cat)) %>%
@@ -47,12 +47,25 @@ corr.n1sen.wm <- bbcor_n1_beh %>%
 
 corr.n1sen.conflict <- bbcor_n1_beh %>%
   drop_na(n1.mean.sensitivity.3_1, CONFLICT)
+
+pvals <- cor.test(corr.n1sen.inhib$n1.mean.sensitivity.3_1, corr.n1sen.inhib$INHIBIT, method = "pearson")$p.value
+pvals <- c(pvals, cor.test(corr.n1sen.wm$n1.mean.sensitivity.3_1, corr.n1sen.wm$WM, method = "pearson")$p.value)
+pvals <- c(pvals, cor.test(corr.n1sen.conflict$n1.mean.sensitivity.3_1, corr.n1sen.conflict$CONFLICT, method = "pearson")$p.value)
+
+# Perform FDR correction
+p.adjust(pvals, method = "fdr")
 # write.csv(corr.n1sen.inhib, "./../corr.n1sen.inhib_0413.csv")
 
 
 cor.test(corr.n1sen.inhib$n1.mean.sensitivity.3_1, corr.n1sen.inhib$INHIBIT, method = "pearson")
 cor.test(corr.n1sen.wm$n1.mean.sensitivity.3_1, corr.n1sen.wm$WM, method = "pearson")
 cor.test(corr.n1sen.conflict$n1.mean.sensitivity.3_1, corr.n1sen.conflict$CONFLICT, method = "pearson")
+
+
+#
+n1_model <- lm(n1.mean.sensitivity.3_1~WM.c+CONFLICT.c+INHIBIT.c, data = bbcor_n1_beh)
+Anova(n1_model, type="III")
+summary(n1_model)
 
 
 ggplot(data = bbcor_n1_beh, aes(x=INHIBIT, y=n1.mean.sensitivity.3_1)) +
