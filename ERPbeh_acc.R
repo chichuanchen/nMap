@@ -20,7 +20,7 @@ acc.by.subj.cond <- nmap_data.long%>%
   summarise(individual_acc = mean(correct_or_not, na.rm=T)) %>%
   ungroup()
 
-# write.csv(acc.by.subj.cond, file = "acc_subj_6cond.csv")
+write.csv(acc.by.subj.cond, file = "../data/ERPbeh/ERPbeh_acc_subj_6cond.csv")
 
 ## Accuracy by subject (across all 6 conditions) -----
 acc.by.subj <- nmap_data.long%>%
@@ -28,7 +28,7 @@ acc.by.subj <- nmap_data.long%>%
   summarise(individual_acc = mean(correct_or_not, na.rm=T)) %>%
   ungroup()
 
-# write.csv(acc.by.subj, file = "acc_subj_overall.csv")
+write.csv(acc.by.subj, file = "../data/ERPbeh/ERPbeh_acc_subj.csv")
 
 ## Accuracy by ratio effect (close minus far) -----
 acc.ratio.effect <- nmap_data.long %>%
@@ -44,6 +44,8 @@ acc.ratio.effect <- nmap_data.long %>%
   summarise(ratio.acc = avg.acc.ratio[cond == "close"] - avg.acc.ratio[cond == "far"]) %>%
   ungroup()
 
+write.csv(acc.ratio.effect, file = "../data/ERPbeh/ERPbeh_acc_ratioeffect.csv")
+
 # ERPbeh x Beh #################################################################
 # combine ERPbeh acc with subj info (sex, KL, EF, age, vocab)
 
@@ -57,7 +59,11 @@ ERPbeh_info_by.cond <- acc.by.subj.cond %>%
              KL %in% c(1:4) ~ "SS",
              KL %in% c(5:8) ~ "CP",
              TRUE ~ as.character(NA))),
-         distance = factor(abs(cue - probe))) %>%
+         distance = factor(abs(cue - probe))) 
+
+
+## By distance (2) -----
+ERPbeh_info_by.distance <- ERPbeh_info_by.cond %>%
   group_by(subj_num, time_point, KL.cat, distance) %>%
   summarise(avg.acc.dist = mean(individual_acc))
 

@@ -6,6 +6,7 @@
 # Set up
 library("tidyverse")
 library("readxl")
+library("lubridate")
 
 rm(list=ls())
 setwd(dir="../data/beh/")
@@ -15,7 +16,7 @@ setwd(dir="../data/beh/")
 
 #########################
 # variables of interest
-my_vars <- c("PREPOST", "SUB", "SEX", "AGEPRE", "KL",
+my_vars <- c("PREPOST", "SUB", "SEX", "KL",
              "WMPRE", "CONFLICTPRE", "INHIBITPRE", "VOCABRAWPRE",
              "WMPOST", "CONFLICTPOST", "INHIBITPOST")
 
@@ -24,8 +25,23 @@ data.raw <- read_excel("newseg_medAD_4.5.23.xlsx") %>%
   rename(subj_num = SUB,
          time_point = PREPOST)
 
+
+age_raw <- read_xlsx("TRNagesprepost.xlsx", 
+                     col_types = c("text", "text", "date", "date", "numeric", "date", "numeric"),
+                     na = "N/A",) 
+
+age_df <- age_raw %>%
+  select(-NEWSUB) %>%
+  rename(subj_num = OLDSUB) %>%
+  mutate(t1_agedays = (BIRTHDATE %--% DATEPRE) / days(1),
+         t2_agedays = (BIRTHDATE %--% DATEPOST) / days(1)) %>%
+  pivot_longer(cols = ends_with("agedays"), names_to = "time_point", values_to = "age.days", values_drop_na = TRUE) %>%
+  mutate(time_point = as.numeric(str_extract(time_point, "\\d+"))) %>%
+  select(subj_num, time_point, age.days)
+
 # tidy - 
 data.tidy <- data.raw %>%
+  
   mutate(WMPOST = parse_number(WMPOST), # automatically turn non-numeric into NA
          CONFLICTPOST = parse_number(CONFLICTPOST),
          INHIBITPOST = parse_number(INHIBITPOST)) %>%
