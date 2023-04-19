@@ -80,25 +80,42 @@ ERPbeh_info_by.subj <- acc.by.subj %>%
   ungroup()
 
 ### Descriptive -----
-#### Overall task accuracy by CP-status -----
+#### Overall task accuracy and age by CP-status -----
 ERPbeh_info_by.subj %>%
   group_by(KL.cat) %>%
   summarise(mean.acc.KL = mean(individual_acc, na.rm=T),
             sd.acc.KL = sd(individual_acc, na.rm=T),
-            n = n())
+            n = n(),
+            mean.age = mean(age.days)/365,
+            sd.age = sd(age.days)/365)
+
+ERPbeh_info_by.subj %>%
+  # group_by(KL.cat) %>%
+  summarise(mean.acc = mean(individual_acc, na.rm=T),
+            sd.acc = sd(individual_acc, na.rm=T),
+            n = n(),
+            mean.age = mean(age.days)/365,
+            sd.age = sd(age.days)/365)
 
 ### Stats -----
-#### Overall performance > chance? ----
 ERPbeh_info_by.subj.SS <- ERPbeh_info_by.subj %>%
   filter(KL.cat == "SS") %>%
   ungroup() 
 
-t.test(ERPbeh_info_by.subj.SS$individual_acc, mu=.5)
-
 ERPbeh_info_by.subj.CP <- ERPbeh_info_by.subj %>%
   filter(KL.cat == "CP") %>%
   ungroup() 
+#### Age and EF and vocab difference between groups? -----
 
+t.test(ERPbeh_info_by.subj.CP$age.days, ERPbeh_info_by.subj.SS$age.days)
+t.test(ERPbeh_info_by.subj.CP$WM, ERPbeh_info_by.subj.SS$WM)
+t.test(ERPbeh_info_by.subj.CP$CONFLICT, ERPbeh_info_by.subj.SS$CONFLICT)
+t.test(ERPbeh_info_by.subj.CP$INHIBIT, ERPbeh_info_by.subj.SS$INHIBIT)
+t.test(ERPbeh_info_by.subj.CP$VOCAB, ERPbeh_info_by.subj.SS$VOCAB)
+
+#### Overall performance > chance? ----
+
+t.test(ERPbeh_info_by.subj.SS$individual_acc, mu=.5)
 t.test(ERPbeh_info_by.subj.CP$individual_acc, mu=.5)
 
 #### Overall performance group difference? ----
