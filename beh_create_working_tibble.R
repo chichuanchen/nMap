@@ -34,7 +34,8 @@ age_df <- age_raw %>%
   select(-NEWSUB) %>%
   rename(subj_num = OLDSUB) %>%
   mutate(t1_agedays = (BIRTHDATE %--% DATEPRE) / days(1),
-         t2_agedays = (BIRTHDATE %--% DATEPOST) / days(1)) %>%
+         t2_agedays = (BIRTHDATE %--% DATEPOST) / days(1),
+         subj_num = as.numeric(subj_num)) %>%
   pivot_longer(cols = ends_with("agedays"), names_to = "time_point", values_to = "age.days", values_drop_na = TRUE) %>%
   mutate(time_point = as.numeric(str_extract(time_point, "\\d+"))) %>%
   select(subj_num, time_point, age.days)
@@ -42,9 +43,9 @@ age_df <- age_raw %>%
 # tidy - 
 data.tidy <- data.raw %>%
   
-  mutate(WMPOST = parse_number(WMPOST), # automatically turn non-numeric into NA
-         CONFLICTPOST = parse_number(CONFLICTPOST),
-         INHIBITPOST = parse_number(INHIBITPOST)) %>%
+  mutate(WMPOST = parse_number(WMPOST, na = "#NULL!"), # automatically turn non-numeric into NA
+         CONFLICTPOST = parse_number(CONFLICTPOST, na = "#NULL!"),
+         INHIBITPOST = parse_number(INHIBITPOST, na = "#NULL!")) %>%
   mutate(
     WM = case_when(time_point == 1 ~ WMPRE,
                    time_point == 2 ~ WMPOST),
@@ -53,7 +54,8 @@ data.tidy <- data.raw %>%
     INHIBIT = case_when(time_point == 1 ~ INHIBITPRE,
                          time_point == 2 ~ INHIBITPOST),
     VOCAB = case_when(time_point == 1 ~ VOCABRAWPRE)) %>%
-  select(!ends_with(c("PRE", "POST")), AGEPRE)
+  select(!ends_with(c("PRE", "POST"))) %>%
+  left_join(age_df, by = c("subj_num", "time_point"))
 
 glimpse(data.tidy)
 
