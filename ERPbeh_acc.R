@@ -70,6 +70,22 @@ ERPbeh_info_by.cond <- acc.by.subj.cond %>%
              KL %in% c(5:8) ~ "CP",
              TRUE ~ as.character(NA))))
 
+### Acc by distance -----
+# approximate distance
+ERPbeh_info_by.cond %>%
+  group_by(subj_num, time_point, KL.cat, approx.dist) %>%
+  summarise(approx.dist.acc = mean(cond_acc)) %>%
+  group_by(KL.cat, approx.dist) %>%
+  summarise(group.approx.dist.acc = mean(approx.dist.acc)) %>%
+  drop_na()
+
+# exact distance
+ERPbeh_info_by.cond %>%
+  group_by(subj_num, time_point, KL.cat, exact.dist) %>%
+  summarise(exact.dist.acc = mean(cond_acc)) %>%
+  group_by(KL.cat, exact.dist) %>%
+  summarise(group.exact.dist.acc = mean(exact.dist.acc)) %>%
+  drop_na()
 
 ## By exact distance (2) -----
 ERPbeh_info_by.exact.dist <- acc.exact.dist.effect %>%
@@ -99,7 +115,9 @@ ERPbeh_info_by.subj <- acc.by.subj %>%
              TRUE ~ as.character(NA)))) %>%
   ungroup()
 
-### Descriptive -----
+
+
+## Descriptive -----
 #### Overall task accuracy and age -----
 ERPbeh_info_by.subj %>%
   group_by(KL.cat) %>%
