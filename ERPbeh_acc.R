@@ -23,9 +23,10 @@ acc.by.subj.cond <- nmap_data.long%>%
 write.csv(acc.by.subj.cond, file = "../data/ERPbeh/ERPbeh_acc_subj_6cond.csv")
 
 ## Accuracy by subject (across all 6 conditions) -----
-acc.by.subj <- nmap_data.long%>%
+
+acc.by.subj <-  acc.by.subj.cond %>%
   group_by(Subject, Session) %>%
-  summarise(individual_acc = mean(correct_or_not, na.rm=T)) %>%
+  summarise(subj_acc = mean(individual_acc, na.rm=T)) %>%
   ungroup()
 
 write.csv(acc.by.subj, file = "../data/ERPbeh/ERPbeh_acc_subj.csv")
@@ -59,13 +60,22 @@ ERPbeh_info_by.cond <- acc.by.subj.cond %>%
              KL %in% c(1:4) ~ "SS",
              KL %in% c(5:8) ~ "CP",
              TRUE ~ as.character(NA))),
-         distance = factor(abs(cue - probe))) 
+         approx.dist = case_when(
+           cue > probe ~ cue/probe,
+           cue < probe ~ probe/cue
+         ),
+         exact.dist = abs(cue - probe))
 
 
-## By distance (2) -----
-ERPbeh_info_by.distance <- ERPbeh_info_by.cond %>%
-  group_by(subj_num, time_point, KL.cat, distance) %>%
-  summarise(avg.acc.dist = mean(individual_acc))
+## By exact distance (2) -----
+ERPbeh_info_by.exact.dist <- ERPbeh_info_by.cond %>%
+  group_by(subj_num, time_point, KL.cat, exact.dist) %>%
+  summarise(avg.acc.exact.dist = mean(individual_acc))
+
+## By approximate distance (3) -----
+ERPbeh_info_by.approx.dist <- ERPbeh_info_by.cond %>%
+  group_by(subj_num, time_point, KL.cat, approx.dist) %>%
+  summarise(avg.acc.approx.dist = mean(individual_acc))
 
 ## By subject -----
 ERPbeh_info_by.subj <- acc.by.subj %>%
@@ -80,19 +90,19 @@ ERPbeh_info_by.subj <- acc.by.subj %>%
   ungroup()
 
 ### Descriptive -----
-#### Overall task accuracy and age by CP-status -----
+#### Overall task accuracy and age -----
 ERPbeh_info_by.subj %>%
   group_by(KL.cat) %>%
-  summarise(mean.acc.KL = mean(individual_acc, na.rm=T),
-            sd.acc.KL = sd(individual_acc, na.rm=T),
+  summarise(mean.acc.KL = mean(subj_acc, na.rm=T),
+            sd.acc.KL = sd(subj_acc, na.rm=T),
             n = n(),
             mean.age = mean(age.days)/365,
             sd.age = sd(age.days)/365)
 
 ERPbeh_info_by.subj %>%
   # group_by(KL.cat) %>%
-  summarise(mean.acc = mean(individual_acc, na.rm=T),
-            sd.acc = sd(individual_acc, na.rm=T),
+  summarise(mean.acc = mean(subj_acc, na.rm=T),
+            sd.acc = sd(subj_acc, na.rm=T),
             n = n(),
             mean.age = mean(age.days)/365,
             sd.age = sd(age.days)/365)
@@ -115,25 +125,44 @@ t.test(ERPbeh_info_by.subj.CP$VOCAB, ERPbeh_info_by.subj.SS$VOCAB)
 
 #### Overall performance > chance? ----
 
-t.test(ERPbeh_info_by.subj.SS$individual_acc, mu=.5)
-t.test(ERPbeh_info_by.subj.CP$individual_acc, mu=.5)
+t.test(ERPbeh_info_by.subj.SS$subj_acc, mu=.5)
+t.test(ERPbeh_info_by.subj.CP$subj_acc, mu=.5)
 
 #### Overall performance group difference? ----
 ERPbeh_info_by.subj %>%
-  t.test(individual_acc ~ KL.cat, data = .)
+  t.test(subj_acc ~ KL.cat, data = .)
   
 
 #### Overall performance distance effect? ----
 # by group
-model.dis.SS <- lm(avg.acc.dist ~ distance,
-     data = subset(ERPbeh_info_by.cond, KL.cat == "SS"))
+model.exact.dis.CP <- lm(avg.acc.exact.dist ~ exact.dist,
+                         data = subset(ERPbeh_info_by.exact.dist, KL.cat == "CP"))
 
-anova(model.dis.SS)
+anova(model.exact.dis.CP)
+summary(model.exact.dis.CP)
 
-model.dis.CP <- lm(avg.acc.dist ~ distance,
-                   data = subset(ERPbeh_info_by.cond, KL.cat == "CP"))
+model.approx.dis.CP <- lm(avg.acc.approx.dist ~ approx.dist,
+                          data = subset(ERPbeh_info_by.approx.dist, KL.cat == "CP"))
 
-anova(model.dis.CP)
+anova(model.approx.dis.CP)
+summary(model.approx.dis.CP)
+#
+
+model.exact.dis.SS <- lm(avg.acc.exact.dist ~ exact.dist,
+     data = subset(ERPbeh_info_by.exact.dist, KL.cat == "SS"))
+
+anova(model.exact.dis.SS)
+summary(model.exact.dis.SS)
+
+
+
+model.approx.dis.SS <- lm(avg.acc.approx.dist ~ approx.dist,
+                         data = subset(ERPbeh_info_by.approx.dist, KL.cat == "SS"))
+
+anova(model.approx.dis.SS)
+summary(model.approx.dis.SS)
+
+
 
 
 #### Correlations -----
