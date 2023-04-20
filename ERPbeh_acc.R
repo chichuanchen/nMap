@@ -168,17 +168,25 @@ summary(model.approx.dis.SS)
 #### Correlations -----
 ##### ERPbeh acc and EF -----
 corr.acc_WM <- ERPbeh_info_by.subj %>%
-  drop_na(individual_acc, WM) 
+  drop_na(subj_acc, WM) 
  
 corr.acc_CONFLICT <- ERPbeh_info_by.subj %>%
-  drop_na(individual_acc, CONFLICT) 
+  drop_na(subj_acc, CONFLICT) 
 
 corr.acc_INHIBIT <- ERPbeh_info_by.subj %>%
-  drop_na(individual_acc, INHIBIT) 
+  drop_na(subj_acc, INHIBIT) 
 
-cor.test(corr.acc_WM$individual_acc, corr.acc_WM$WM)
-cor.test(corr.acc_CONFLICT$individual_acc, corr.acc_CONFLICT$CONFLICT)
-cor.test(corr.acc_INHIBIT$individual_acc, corr.acc_INHIBIT$INHIBIT)
+cor.test(corr.acc_INHIBIT$subj_acc, corr.acc_INHIBIT$INHIBIT)
+cor.test(corr.acc_WM$subj_acc, corr.acc_WM$WM)
+cor.test(corr.acc_CONFLICT$subj_acc, corr.acc_CONFLICT$CONFLICT)
+
+
+pvals <- cor.test(corr.acc_INHIBIT$subj_acc, corr.acc_INHIBIT$INHIBIT)$p.value
+pvals <- c(pvals, cor.test(corr.acc_WM$subj_acc, corr.acc_WM$WM)$p.value)
+pvals <- c(pvals, cor.test(corr.acc_CONFLICT$subj_acc, corr.acc_CONFLICT$CONFLICT)$p.value)
+
+# Perform FDR correction
+p.adjust(pvals, method = "fdr")
 
 ##### beh ratio effect and EF -----
 corr.ratio_WM <- ERPbeh_info_by.subj %>%
