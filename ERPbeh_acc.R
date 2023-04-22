@@ -33,7 +33,10 @@ write.csv(acc.by.subj.cond, file = "../data/ERPbeh/ERPbeh_acc_subj_6cond.csv")
 
 acc.by.subj <-  acc.by.subj.cond %>%
   group_by(subj_num, time_point) %>%
-  summarise(subj_acc = mean(cond_acc, na.rm=T)) %>%
+  summarise(subj_acc = mean(cond_acc, na.rm=T),
+            subj_acc_sd = sd(cond_acc, na.rm=T),
+            n=n(),
+            subj_acc_se = subj_acc_sd/sqrt(n)) %>%
   ungroup()
 
 write.csv(acc.by.subj, file = "../data/ERPbeh/ERPbeh_acc_subj.csv")
@@ -76,7 +79,10 @@ ERPbeh_info_by.cond %>%
   group_by(subj_num, time_point, KL.cat, approx.dist) %>%
   summarise(approx.dist.acc = mean(cond_acc)) %>%
   group_by(KL.cat, approx.dist) %>%
-  summarise(group.approx.dist.acc = mean(approx.dist.acc)) %>%
+  summarise(group.approx.dist.acc = mean(approx.dist.acc),
+            group.approx.dist.acc.sd = sd(approx.dist.acc),
+            n = n(),
+            group.approx.dist.acc.se = group.approx.dist.acc.sd/sqrt(n)) %>%
   drop_na()
 
 # exact distance
@@ -84,7 +90,10 @@ ERPbeh_info_by.cond %>%
   group_by(subj_num, time_point, KL.cat, exact.dist) %>%
   summarise(exact.dist.acc = mean(cond_acc)) %>%
   group_by(KL.cat, exact.dist) %>%
-  summarise(group.exact.dist.acc = mean(exact.dist.acc)) %>%
+  summarise(group.exact.dist.acc = mean(exact.dist.acc),
+            group.exact.dist.acc.sd = sd(exact.dist.acc),
+            n = n(),
+            group.exact.dist.acc.se = group.exact.dist.acc.sd/sqrt(n)) %>%
   drop_na()
 
 ## By exact distance (2) -----
@@ -124,6 +133,7 @@ ERPbeh_info_by.subj %>%
   summarise(mean.acc.KL = mean(subj_acc, na.rm=T),
             sd.acc.KL = sd(subj_acc, na.rm=T),
             n = n(),
+            se.acc.KL = sd.acc.KL/sqrt(n),
             mean.age = mean(age.days)/365,
             sd.age = sd(age.days)/365)
 
@@ -132,6 +142,7 @@ ERPbeh_info_by.subj %>%
   summarise(mean.acc = mean(subj_acc, na.rm=T),
             sd.acc = sd(subj_acc, na.rm=T),
             n = n(),
+            se.acc = sd.acc/sqrt(n),
             mean.age = mean(age.days)/365,
             sd.age = sd(age.days)/365)
 
