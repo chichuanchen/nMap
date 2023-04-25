@@ -50,7 +50,7 @@ acc.approx.dist.effect <- acc.by.subj.cond %>%
   ungroup()
 
 write.csv(acc.approx.dist.effect, file = "../data/ERPbeh/ERPbeh_acc_approx_dist_effect.csv")
-
+save(acc.approx.dist.effect, file="../data/ERPbeh/acc.approx.dist.effect.RData")
 ## Accuracy by exact distance effect (2 - 1) -----
 acc.exact.dist.effect <- acc.by.subj.cond %>%
   group_by(subj_num, time_point, exact.dist) %>%
@@ -60,6 +60,13 @@ acc.exact.dist.effect <- acc.by.subj.cond %>%
   ungroup()
 
 write.csv(acc.exact.dist.effect, file = "../data/ERPbeh/ERPbeh_acc_exact_dist_effect.csv")
+save(acc.exact.dist.effect, file="../data/ERPbeh/acc.exact.dist.effect.RData")
+
+#
+dis.effects <- acc.approx.dist.effect %>%
+  full_join(acc.exact.dist.effect, by = c("subj_num","time_point")) %>%
+  drop_na(approx.dist.acc, exact.dist.acc)
+cor.test(dis.effects$approx.dist.acc, dis.effects$exact.dist.acc, method = "pearson")
 
 # ERPbeh x Beh #################################################################
 # combine ERPbeh acc with subj info (sex, KL, EF, age, vocab)
@@ -267,3 +274,48 @@ pvals <- c(pvals, cor.test(corr.ratio_INHIBIT$exact.dist.acc, corr.ratio_INHIBIT
 
 # Perform FDR correction
 p.adjust(pvals, method = "fdr")
+
+
+##
+exact.wm <- ERPbeh_info_by.exact.dist %>%
+  drop_na(exact.dist.acc, WM)
+cor.test(exact.wm$exact.dist.acc, exact.wm$WM, method = "pearson")
+
+exact.inhibit <- ERPbeh_info_by.exact.dist %>%
+  drop_na(exact.dist.acc, INHIBIT)
+cor.test(exact.inhibit$exact.dist.acc, exact.inhibit$INHIBIT, method = "pearson")
+
+exact.CONFLICT <- ERPbeh_info_by.exact.dist %>%
+  drop_na(exact.dist.acc, CONFLICT)
+cor.test(exact.CONFLICT$exact.dist.acc, exact.CONFLICT$CONFLICT, method = "pearson")
+
+exact.VOCAB <- ERPbeh_info_by.exact.dist %>%
+  drop_na(exact.dist.acc, VOCAB)
+cor.test(exact.VOCAB$exact.dist.acc, exact.VOCAB$VOCAB, method = "pearson")
+
+exact.age <- ERPbeh_info_by.exact.dist %>%
+  drop_na(exact.dist.acc, age.days)
+cor.test(exact.age$exact.dist.acc, exact.age$age.days, method = "pearson")
+
+#
+
+
+approx.wm <- ERPbeh_info_by.approx.dist %>%
+  drop_na(approx.dist.acc, WM)
+cor.test(approx.wm$approx.dist.acc, approx.wm$WM, method = "pearson")
+
+approx.inhibit <- ERPbeh_info_by.approx.dist %>%
+  drop_na(approx.dist.acc, INHIBIT)
+cor.test(approx.inhibit$approx.dist.acc, approx.inhibit$INHIBIT, method = "pearson")
+
+approx.CONFLICT <- ERPbeh_info_by.approx.dist %>%
+  drop_na(approx.dist.acc, CONFLICT)
+cor.test(approx.CONFLICT$approx.dist.acc, approx.CONFLICT$CONFLICT, method = "pearson")
+
+approx.VOCAB <- ERPbeh_info_by.approx.dist %>%
+  drop_na(approx.dist.acc, VOCAB)
+cor.test(approx.VOCAB$approx.dist.acc, approx.VOCAB$VOCAB, method = "pearson")
+
+approx.age <- ERPbeh_info_by.approx.dist %>%
+  drop_na(approx.dist.acc, age.days)
+cor.test(approx.age$approx.dist.acc, approx.age$age.days, method = "pearson")
