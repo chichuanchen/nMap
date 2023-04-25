@@ -20,6 +20,48 @@ data_erp_all <- data_erp_all %>%
              KL.cont %in% c(5:8) ~ "CP",
              TRUE ~ as.character(NA)))
 
+# Cog measures correlations -----
+wm.conflict <- beh_data.raw %>%
+  drop_na(WM, CONFLICT)
+cor.test(wm.conflict$WM, wm.conflict$CONFLICT, method = "pearson")
+
+wm.inhibit <- beh_data.raw %>%
+  drop_na(WM, INHIBIT)
+cor.test(wm.inhibit$WM, wm.inhibit$INHIBIT, method = "pearson")
+
+wm.ppvt <- beh_data.raw %>%
+  drop_na(WM, VOCAB)
+cor.test(wm.ppvt$WM, wm.ppvt$VOCAB, method = "pearson")
+
+wm.age <- beh_data.raw %>%
+  drop_na(WM, age.days)
+cor.test(wm.age$WM, wm.age$age.days, method = "pearson")
+
+
+inhibit.conflict <- beh_data.raw %>%
+  drop_na(INHIBIT, CONFLICT)
+cor.test(inhibit.conflict$INHIBIT, inhibit.conflict$CONFLICT, method = "pearson")
+
+inhibit.VOCAB <- beh_data.raw %>%
+  drop_na(INHIBIT, VOCAB)
+cor.test(inhibit.VOCAB$INHIBIT, inhibit.VOCAB$VOCAB, method = "pearson")
+
+CONFLICT.VOCAB <- beh_data.raw %>%
+  drop_na(CONFLICT, VOCAB)
+cor.test(CONFLICT.VOCAB$CONFLICT, CONFLICT.VOCAB$VOCAB, method = "pearson")
+
+age.VOCAB <- beh_data.raw %>%
+  drop_na(age.days, VOCAB)
+cor.test(age.VOCAB$age.days, age.VOCAB$VOCAB, method = "pearson")
+
+age.INHIBIT <- beh_data.raw %>%
+  drop_na(age.days, INHIBIT)
+cor.test(age.INHIBIT$age.days, age.INHIBIT$INHIBIT, method = "pearson")
+
+age.CONFLICT <- beh_data.raw %>%
+  drop_na(age.days, CONFLICT)
+cor.test(age.CONFLICT$age.days, age.CONFLICT$CONFLICT, method = "pearson")
+
 # calculate individual (subj_num and time_point) mean ERP amplitude for different components
 # N1 sensitivity to visual quantity 3 - 1 (= far - close) ----
 indi_n1_sensitivity <- data_erp_all %>%
@@ -32,13 +74,15 @@ indi_n1_sensitivity <- data_erp_all %>%
 bbcor_n1_beh <- full_join(indi_n1_sensitivity, beh_data.raw) %>%
   mutate(subj_num = factor(subj_num),
          time_point = factor(time_point),
-         KL.cat = factor(KL.cat)) %>%
-  ungroup() %>%
-  mutate(WM.c = as.vector(scale(WM, center = TRUE, scale=TRUE)),
-         CONFLICT.c = as.vector(scale(CONFLICT, center = TRUE, scale=TRUE)),
-         INHIBIT.c = as.vector(scale(INHIBIT, center = TRUE, scale=TRUE)),
-         VOCAB.c = as.vector(scale(VOCAB, center = TRUE, scale=TRUE))) 
-
+         KL.cat = factor(KL.cat)) 
+#
+# %>%
+#   ungroup() %>%
+#   mutate(WM.c = as.vector(scale(WM, center = TRUE, scale=TRUE)),
+#          CONFLICT.c = as.vector(scale(CONFLICT, center = TRUE, scale=TRUE)),
+#          INHIBIT.c = as.vector(scale(INHIBIT, center = TRUE, scale=TRUE)),
+#          VOCAB.c = as.vector(scale(VOCAB, center = TRUE, scale=TRUE))) 
+# 
 corr.n1sen.inhib <- bbcor_n1_beh %>%
   drop_na(n1.mean.sensitivity.3_1, INHIBIT)
 
@@ -48,11 +92,19 @@ corr.n1sen.wm <- bbcor_n1_beh %>%
 corr.n1sen.conflict <- bbcor_n1_beh %>%
   drop_na(n1.mean.sensitivity.3_1, CONFLICT)
 
+corr.n1sen.ppvt <- bbcor_n1_beh %>%
+  drop_na(n1.mean.sensitivity.3_1, VOCAB)
+
+corr.n1sen.age <- bbcor_n1_beh %>%
+  drop_na(n1.mean.sensitivity.3_1, age.days)
+
 ## N1 & EF correlation ----
 
 cor.test(corr.n1sen.inhib$n1.mean.sensitivity.3_1, corr.n1sen.inhib$INHIBIT, method = "pearson")
 cor.test(corr.n1sen.wm$n1.mean.sensitivity.3_1, corr.n1sen.wm$WM, method = "pearson")
 cor.test(corr.n1sen.conflict$n1.mean.sensitivity.3_1, corr.n1sen.conflict$CONFLICT, method = "pearson")
+cor.test(corr.n1sen.ppvt$n1.mean.sensitivity.3_1, corr.n1sen.ppvt$VOCAB, method = "pearson")
+cor.test(corr.n1sen.age$n1.mean.sensitivity.3_1, corr.n1sen.age$age.days, method = "pearson")
 
 pvals <- cor.test(corr.n1sen.inhib$n1.mean.sensitivity.3_1, corr.n1sen.inhib$INHIBIT, method = "pearson")$p.value
 pvals <- c(pvals, cor.test(corr.n1sen.wm$n1.mean.sensitivity.3_1, corr.n1sen.wm$WM, method = "pearson")$p.value)
@@ -98,12 +150,14 @@ indi_n2_approx.dist <- data_erp_all %>%
 bbcor_n2.exact.dist_beh <- full_join(indi_n2_exact.dist, beh_data.raw) %>%
   mutate(subj_num = factor(subj_num),
          time_point = factor(time_point),
-         KL.cat = factor(KL.cat)) %>%
-  ungroup() %>%
-  mutate(WM.c = as.vector(scale(WM, center = TRUE, scale=TRUE)),
-         CONFLICT.c = as.vector(scale(CONFLICT, center = TRUE, scale=TRUE)),
-         INHIBIT.c = as.vector(scale(INHIBIT, center = TRUE, scale=TRUE)),
-         VOCAB.c = as.vector(scale(VOCAB, center = TRUE, scale=TRUE))) 
+         KL.cat = factor(KL.cat)) 
+#
+# %>%
+#   ungroup() %>%
+#   mutate(WM.c = as.vector(scale(WM, center = TRUE, scale=TRUE)),
+#          CONFLICT.c = as.vector(scale(CONFLICT, center = TRUE, scale=TRUE)),
+#          INHIBIT.c = as.vector(scale(INHIBIT, center = TRUE, scale=TRUE)),
+#          VOCAB.c = as.vector(scale(VOCAB, center = TRUE, scale=TRUE))) 
 
 
 ### N2 exact & EF correlation ----
@@ -116,9 +170,17 @@ corr.n2exact.wm <- bbcor_n2.exact.dist_beh %>%
 corr.n2exact.conflict <- bbcor_n2.exact.dist_beh %>%
   drop_na(n2.exact.dist.2_1, CONFLICT)
 
+corr.n2exact.ppvt <- bbcor_n2.exact.dist_beh %>%
+  drop_na(n2.exact.dist.2_1, VOCAB)
+
+corr.n2exact.age <- bbcor_n2.exact.dist_beh %>%
+  drop_na(n2.exact.dist.2_1, age.days)
+
 cor.test(corr.n2exact.inhib$n2.exact.dist.2_1, corr.n2exact.inhib$INHIBIT, method = "pearson")
 cor.test(corr.n2exact.wm$n2.exact.dist.2_1, corr.n2exact.wm$WM, method = "pearson")
 cor.test(corr.n2exact.conflict$n2.exact.dist.2_1, corr.n2exact.conflict$CONFLICT, method = "pearson")
+cor.test(corr.n2exact.ppvt$n2.exact.dist.2_1, corr.n2exact.ppvt$VOCAB, method = "pearson")
+cor.test(corr.n2exact.age$n2.exact.dist.2_1, corr.n2exact.age$age.days, method = "pearson")
 
 pvals <- cor.test(corr.n2exact.inhib$n2.exact.dist.2_1, corr.n2exact.inhib$INHIBIT, method = "pearson")$p.value
 pvals <- c(pvals, cor.test(corr.n2exact.wm$n2.exact.dist.2_1, corr.n2exact.wm$WM, method = "pearson")$p.value)
@@ -126,6 +188,12 @@ pvals <- c(pvals, cor.test(corr.n2exact.conflict$n2.exact.dist.2_1, corr.n2exact
 
 # Perform FDR correction
 p.adjust(pvals, method = "fdr")
+
+## N2 & N1 -----
+n1.n2 <- indi_n2_exact.dist %>%
+  full_join(indi_n1_sensitivity, by = c("subj_num", "time_point", "KL.cat"))
+
+cor.test(n1.n2$n1.mean.sensitivity.3_1, n1.n2$n2.exact.dist.2_1, method = "pearson")
 
 ### N2 exact & EF regression ----
 
