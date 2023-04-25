@@ -12,6 +12,8 @@ rm(list = ls())
 load("../data/ERP/tidied/erp_tidied.RData")
 load("../data/beh/beh_data_tidied.RData")
 
+load("../data/ERPbeh/acc.approx.dist.effect.RData")
+load("../data/ERPbeh/acc.exact.dist.effect.RData")
 #
 data_erp_all <- data_erp_all %>%
   mutate(KL.cat = 
@@ -114,6 +116,17 @@ pvals <- c(pvals, cor.test(corr.n1sen.conflict$n1.mean.sensitivity.3_1, corr.n1s
 p.adjust(pvals, method = "fdr")
 # write.csv(corr.n1sen.inhib, "./../corr.n1sen.inhib_0413.csv")
 
+## N1 & behavioral distance effects
+n1.exact <- indi_n1_sensitivity %>%
+  full_join(acc.exact.dist.effect, by = c("subj_num", "time_point")) %>%
+  drop_na(n1.mean.sensitivity.3_1, exact.dist.acc)
+cor.test(n1.exact$n1.mean.sensitivity.3_1, n1.exact$exact.dist.acc, method = "pearson")
+
+
+n1.approx <- indi_n1_sensitivity %>%
+  full_join(acc.approx.dist.effect, by = c("subj_num", "time_point")) %>%
+  drop_na(n1.mean.sensitivity.3_1, approx.dist.acc)
+cor.test(n1.approx$n1.mean.sensitivity.3_1, n1.approx$approx.dist.acc, method = "pearson")
 
 
 ## N1 & EF regression ----
@@ -145,6 +158,16 @@ indi_n2_approx.dist <- data_erp_all %>%
   summarise(approx.dist.mean.amp = mean(amp)) %>%
   summarise(n2.approx.dist.2_1 = (approx.dist.mean.amp[ratio=="far"]) - (approx.dist.mean.amp[ratio=="close"]))
 
+## N2 & behavioral distance effects
+n2.exact <- indi_n2_exact.dist %>%
+  full_join(acc.exact.dist.effect, by = c("subj_num", "time_point")) %>%
+  drop_na(n2.exact.dist.2_1, exact.dist.acc)
+cor.test(n2.exact$n2.exact.dist.2_1, n2.exact$exact.dist.acc, method = "pearson")
+
+n2.approx <- indi_n2_exact.dist %>%
+  full_join(acc.approx.dist.effect, by = c("subj_num", "time_point")) %>%
+  drop_na(n2.exact.dist.2_1, approx.dist.acc)
+cor.test(n2.approx$n2.exact.dist.2_1, n2.approx$approx.dist.acc, method = "pearson")
 # combine erp and beh info ----
 ## N2 exact distance effect ----
 bbcor_n2.exact.dist_beh <- full_join(indi_n2_exact.dist, beh_data.raw) %>%
