@@ -12,7 +12,7 @@ library("tidyverse")
 library("readxl")
 
 rm(list=ls())
-setwd(dir="../averaged6conds041423")
+setwd(dir="../data/ERP/raw_data/averaged6conds041423")
 
 # read in raw data (provided by Dan) in preparation of constructing LME models -----
 data_N2_P2p_375_475 <- read_csv("RAT_medAD_midlate041423.csv", col_names = F) %>%

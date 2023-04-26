@@ -84,10 +84,11 @@ summary(model.n1.cardinal.full) # significant cardinal effect
 summary(model.n1.cardinal.SS) # significant cardinal effect
 summary(model.n1.cardinal.CP) # significant cardinal effect
 
+
 # #### Data for plot: emmeans & pred -----
-# emmean.n1.cardinal <- emmeans(model.n1.cardinal.full.factor, pairwise~cardinal|KL.cat, # within group comparison: compare levels of ratio within each level of KL
-#                               mode = "satterthwaite",
-#                               lmerTest.limit = 240000)
+emmean.n1.cardinal <- emmeans(model.n1.cardinal.full.factor, pairwise~cardinal|KL.cat, # within group comparison: compare levels of ratio within each level of KL
+                              mode = "satterthwaite",
+                              lmerTest.limit = 240000)
 # emmean.n1.cardinal$contrasts %>% data.frame()
 # data.emmean.n1.cardinal <- emmean.n1.cardinal$emmeans %>% data.frame() # used for plot
 
