@@ -36,7 +36,7 @@ data_N1_P2a <- read_csv("RATIO_medAD_N1indtrialdata040823.csv", col_names = F) %
 
 
 # Combine data frames and tidy
-data_erp_all <- full_join(data_N2_P2p_375_475, data_N1_P2a,
+data_erp_all_indi_trial <- full_join(data_N2_P2p_375_475, data_N1_P2a,
                            relationship = "many-to-many") %>%
   pivot_longer(cols = starts_with("erp"), names_to = "component", names_prefix = "erp.", values_to = "amp") %>%
   distinct(subj_num, time_point, KL.cont, cond, component, amp, trial_num) %>%
@@ -55,6 +55,7 @@ data_erp_all <- full_join(data_N2_P2p_375_475, data_N1_P2a,
              cond %in% c(2, 3) ~ 2,
              cond %in% c(1, 5) ~ 3))
 
+save(data_erp_all_indi_trial, file="../../tidied/erp_individual_trial.RData")
 
 # Trial # stats -----
 
