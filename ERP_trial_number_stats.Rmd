@@ -63,22 +63,11 @@ n_trial_cond
 ```{r}
 aov.cond <- aov(n_trial_individual~factor(cond)+Error(factor(uID)), data = n_trial_subj)
 summary(aov.cond)
-
-# aov.cond <- anova_test(data = n_trial_subj, dv = n_trial_individual, wid = uID, within = cond)
-# get_anova_table(aov.cond)
 ```
 
 ### Are there differences in the number of increasing vs. decreasing trials? - No
 ```{r}
-# order_dif <- lm(n_trial_individual ~ order, data = n_trial_subj)
-# anova(order_dif)
-
-# aov.cond<-aov(n_trial_individual ~ order + Error(uID), n_trial_subj)
 aov.order <- aov(n_trial_individual~factor(order)+Error(factor(uID)), data = n_trial_subj)
 summary(aov.order)
-
-# aov.cond <- n_trial_subj %>% 
-#   anova_test(dv=n_trial_individual, within = order, wid = uID)
-# get_anova_table(aov.cond)
 ```
 
