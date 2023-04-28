@@ -16,6 +16,7 @@ setup
 
 library("tidyverse")
 library("readxl")
+library("rstatix")
 
 rm(list=ls())
 
@@ -37,9 +38,12 @@ n_trial_subj <- data_erp_all_indi_trial %>%
   mutate(order = factor(order),
          cond = factor(cond))
 ```
-## Component doesnt seem to matter - numbers are the same across components. Remove redundant info
+## Component doesnt seem to matter - numbers are the same across components. Remove redundant info. Add unique ID column.
 ```{r}
-n_trial_subj <- n_trial_subj %>% distinct_at(vars(-component))
+n_trial_subj <- n_trial_subj %>% 
+  distinct_at(vars(-component)) %>% 
+  unite("uID", subj_num, time_point, sep = "_", remove = F, na.rm = FALSE) %>%
+  mutate(uID = factor(uID))
 ```
 
 
@@ -63,11 +67,20 @@ n_trial_cond
 ```{r}
 cond_dif <- lm(n_trial_individual ~ cond, data = n_trial_subj)
 anova(cond_dif)
+
+aov.cond <- anova_test(data = n_trial_subj, dv = n_trial_individual, wid = uID, within = cond)
+get_anova_table(aov.cond)
 ```
 
 ### Are there differences in the number of increasing vs. decreasing trials? - No
 ```{r}
-order_dif <- lm(n_trial_individual ~ order, data = n_trial_subj)
-anova(order_dif)
+# order_dif <- lm(n_trial_individual ~ order, data = n_trial_subj)
+# anova(order_dif)
+
+# aov.cond<-aov(n_trial_individual ~ order + Error(uID), n_trial_subj)
+
+aov.cond <- n_trial_subj %>% 
+  anova_test(dv=n_trial_individual, within = order, wid = uID)
+get_anova_table(aov.cond)
 ```
 
