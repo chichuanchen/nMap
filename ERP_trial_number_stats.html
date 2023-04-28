@@ -369,17 +369,19 @@ display: none;
 ## ── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──
 ## ✖ dplyr::filter() masks stats::filter()
 ## ✖ dplyr::lag()    masks stats::lag()
-## ℹ Use the ]8;;http://conflicted.r-lib.org/conflicted package]8;; to force all conflicts to become errors</code></pre>
+## ℹ Use the ]8;;http://conflicted.r-lib.org/conflicted package]8;; to force all conflicts to become errors
+## 
+## Attaching package: &#39;rstatix&#39;
+## 
+## 
+## The following object is masked from &#39;package:stats&#39;:
+## 
+##     filter</code></pre>
 <div id="count-number-of-trials-for-each-subject-each-component-and-each-condition" class="section level2">
 <h2>Count number of trials for each subject, each component, and each
 condition</h2>
 <pre><code>## `summarise()` has grouped output by &#39;subj_num&#39;, &#39;time_point&#39;, &#39;component&#39;. You
 ## can override using the `.groups` argument.</code></pre>
-</div>
-<div id="component-doesnt-seem-to-matter---numbers-are-the-same-across-components.-remove-redundant-info" class="section level2">
-<h2>Component doesnt seem to matter - numbers are the same across
-components. Remove redundant info</h2>
-<pre class="r"><code>n_trial_subj &lt;- n_trial_subj %&gt;% distinct_at(vars(-component))</code></pre>
 </div>
 <div id="calculate-the-mean-sd-and-range-for-the-number-of-trials-per-subject-for-each-of-the-6-conditions" class="section level2">
 <h2>Calculate the mean, sd, and range for the number of trials per
@@ -400,26 +402,32 @@ subject for each of the 6 conditions</h2>
 <div id="are-there-differences-in-the-number-of-trials-across-the-six-conditions---no" class="section level3">
 <h3>Are there differences in the number of trials across the six
 conditions? - No</h3>
-<pre class="r"><code>cond_dif &lt;- lm(n_trial_individual ~ cond, data = n_trial_subj)
-anova(cond_dif)</code></pre>
-<pre><code>## Analysis of Variance Table
+<pre class="r"><code>aov.cond &lt;- aov(n_trial_individual~factor(cond)+Error(factor(uID)), data = n_trial_subj)
+summary(aov.cond)</code></pre>
+<pre><code>## 
+## Error: factor(uID)
+##            Df Sum Sq Mean Sq F value Pr(&gt;F)
+## Residuals 183   1158   6.326               
 ## 
-## Response: n_trial_individual
-##             Df  Sum Sq Mean Sq F value Pr(&gt;F)
-## cond         5    9.82  1.9640  0.9144 0.4708
-## Residuals 1098 2358.35  2.1479</code></pre>
+## Error: Within
+##               Df Sum Sq Mean Sq F value Pr(&gt;F)
+## factor(cond)   5    9.8   1.964   1.497  0.188
+## Residuals    915 1200.7   1.312</code></pre>
 </div>
 <div id="are-there-differences-in-the-number-of-increasing-vs.-decreasing-trials---no" class="section level3">
 <h3>Are there differences in the number of increasing vs. decreasing
 trials? - No</h3>
-<pre class="r"><code>order_dif &lt;- lm(n_trial_individual ~ order, data = n_trial_subj)
-anova(order_dif)</code></pre>
-<pre><code>## Analysis of Variance Table
+<pre class="r"><code>aov.order &lt;- aov(n_trial_individual~factor(order)+Error(factor(uID)), data = n_trial_subj)
+summary(aov.order)</code></pre>
+<pre><code>## 
+## Error: factor(uID)
+##            Df Sum Sq Mean Sq F value Pr(&gt;F)
+## Residuals 183   1158   6.326               
 ## 
-## Response: n_trial_individual
-##             Df  Sum Sq Mean Sq F value Pr(&gt;F)
-## order        1    1.83  1.8342  0.8542 0.3556
-## Residuals 1102 2366.34  2.1473</code></pre>
+## Error: Within
+##                Df Sum Sq Mean Sq F value Pr(&gt;F)
+## factor(order)   1    1.8   1.834   1.395  0.238
+## Residuals     919 1208.7   1.315</code></pre>
 </div>
 </div>
 </div>
