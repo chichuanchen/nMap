@@ -134,6 +134,8 @@ ERPbeh_info_by.subj <- acc.by.subj %>%
 
 
 ## Descriptive -----
+table(duplicated(ERPbeh_info_by.subj$subj_num))
+
 #### Overall task accuracy and age -----
 ERPbeh_info_by.subj %>%
   group_by(KL.cat) %>%
@@ -142,7 +144,8 @@ ERPbeh_info_by.subj %>%
             n = n(),
             se.acc.KL = sd.acc.KL/sqrt(n),
             mean.age = mean(age.days)/365,
-            sd.age = sd(age.days)/365)
+            sd.age = sd(age.days)/365) %>%
+  as.data.frame()
 
 ERPbeh_info_by.subj %>%
   # group_by(KL.cat) %>%
@@ -151,7 +154,8 @@ ERPbeh_info_by.subj %>%
             n = n(),
             se.acc = sd.acc/sqrt(n),
             mean.age = mean(age.days)/365,
-            sd.age = sd(age.days)/365)
+            sd.age = sd(age.days)/365) %>%
+  as.data.frame()
 
 ### Stats -----
 ERPbeh_info_by.subj.SS <- ERPbeh_info_by.subj %>%
