@@ -56,7 +56,7 @@ data.n1 <- data_erp_all %>%
   
 glimpse(data.n1)
 ### Cardinal -----
-model.n1.cardinal.full <- lmerTest::lmer(amp ~ cardinal + KL.cat + cardinal:KL.cat + time_point + (1|subj_num), # correlated slope & intercept
+model.n1.cardinal.full <- lmerTest::lmer(amp ~ cardinal * KL.cat + time_point + (1|subj_num), # correlated slope & intercept
                                          data = data.n1, REML = T)
 # cardinal as factor
 model.n1.cardinal.full.factor <- data.n1 %>%
@@ -131,11 +131,11 @@ data.p2p <- data_erp_all %>% filter(component == "p2p") %>%
   ))
 glimpse(data.p2p)
 
-### Ratio -----
+### Approximate distance -----
 
-model.p2p.ratio.full.factor <- lmerTest::lmer(amp ~ ratio * KL.cat + time_point + (time_point|subj_num), # correlated slope & intercept
+model.p2p.ratio.full.factor <- lmerTest::lmer(amp ~ ratio * KL.cat + time_point + (1|subj_num), # correlated slope & intercept
                                data = data.p2p, REML = T)
-model.p2p.ratio.full <- lmerTest::lmer(amp ~ ratio.num * KL.cat + time_point + (time_point|subj_num), # correlated slope & intercept
+model.p2p.ratio.full <- lmerTest::lmer(amp ~ ratio.num * KL.cat + time_point + (1|subj_num), # correlated slope & intercept
                                        data = data.p2p, REML = T)
 
 #### test model assumption -----
@@ -158,9 +158,9 @@ summary(model.p2p.ratio.SS)
 summary(model.p2p.ratio.CP)
 
 #### Data for plot: emmeans & pred -----
-# emmean.p2p.ratio <- emmeans(model.p2p.ratio.full.factor, pairwise~ratio|KL.cat, # within group comparison: compare levels of ratio within each level of KL
-#                             mode = "satterthwaite",
-#                             lmerTest.limit = 240000)
+emmean.p2p.ratio <- emmeans(model.p2p.ratio.full.factor, pairwise~ratio|KL.cat, # within group comparison: compare levels of ratio within each level of KL
+                            mode = "satterthwaite",
+                            lmerTest.limit = 240000)
 # emmean.p2p.ratio$contrasts %>% data.frame()
 # data.emmean.p2p.ratio <- emmean.p2p.ratio$emmeans %>% 
 #   data.frame() %>% 
@@ -204,8 +204,8 @@ data.p2p %>%
                 position=position_dodge(.1), width=.2, linewidth=.6) +
   labs(x = "Numerical ratio", y = "Estimated marginal means of P2p amplitude (mV)", color = "CP status")
 
-### Distance -----
-model.p2p.distance.full <- lmerTest::lmer(amp ~ distance * KL.cat + time_point + (time_point|subj_num), # correlated slope & intercept
+### Exact Distance -----
+model.p2p.distance.full <- lmerTest::lmer(amp ~ distance * KL.cat + time_point + (1|subj_num), # correlated slope & intercept
                                        data = data.p2p, REML = T)
 
 # break down KL levels and test linear effect of distance
@@ -279,33 +279,11 @@ glimpse(data.n2)
 
 #
 
-model.n2. <- lmerTest::lmer(amp ~ distance + ratio.num + KL.cat + distance:KL.cat + ratio.num:KL.cat  + time_point + (time_point|subj_num), # correlated slope & intercept
-                                         data = data.n2, REML = T)
-model.n2.noKLmain <- lmerTest::lmer(amp ~ distance + ratio.num + distance:KL.cat + ratio.num:KL.cat  + time_point + (time_point|subj_num), # correlated slope & intercept
-                            data = data.n2, REML = T)
-model.n2.CP <- lmerTest::lmer(amp ~ distance + ratio.num + time_point + (time_point|subj_num), # correlated slope & intercept
-                            data = subset(data.n2, KL.cat == "CP"), REML = T)
-
-model.n2.SS <- lmerTest::lmer(amp ~ distance + ratio.num + time_point + (time_point|subj_num), # correlated slope & intercept
-                            data = subset(data.n2, KL.cat == "SS"), REML = T)
-
-model.n2.reducedistance <- lmerTest::lmer(amp ~ ratio.num + KL.cat + time_point + (time_point|subj_num), # correlated slope & intercept
-                            data = data.n2, REML = T)
-model.n2.reduceratio <- lmerTest::lmer(amp ~ distance + KL.cat + time_point + (time_point|subj_num), # correlated slope & intercept
-                                          data = data.n2, REML = T)
-summary(model.n2.)
-summary(model.n2.CP)
-summary(model.n2.SS)
-
-summary(model.n2.reducedistance)
-summary(model.n2.reduceratio)
-anova(model.n2., model.n2.noKLmain)
-
 data.n2.nooutlier <- data.n2 %>% filter(!amp < -100)
-### Ratio -----
+### Approximate distance -----
 model.n2.ratio.full.factor <- lmerTest::lmer(amp ~ ratio * KL.cat + time_point + (time_point|subj_num), # correlated slope & intercept
                                               data = data.n2, REML = T)
-model.n2.ratio.full <- lmerTest::lmer(amp ~ ratio.num * KL.cat + time_point + (time_point|subj_num), # correlated slope & intercept
+model.n2.ratio.full <- lmerTest::lmer(amp ~ ratio.num * KL.cat + time_point + (1|subj_num), # correlated slope & intercept
                                        data = data.n2, REML = T)
 #### test model assumption -----
 # plot(resid(model.n2.ratio.full), data.n2.nooutlier$amp) # Linearity (visual inspection)
@@ -314,9 +292,9 @@ model.n2.ratio.full <- lmerTest::lmer(amp ~ ratio.num * KL.cat + time_point + (t
 
 # break down KL levels and test linear effect of ratio
 
-model.n2.ratio.SS <- lmerTest::lmer(amp ~ ratio.num + time_point + (time_point|subj_num), # correlated slope & intercept
+model.n2.ratio.SS <- lmerTest::lmer(amp ~ ratio.num + time_point + (1|subj_num), # correlated slope & intercept
                                      data = subset(data.n2, KL.cat == "SS"), REML = T)
-model.n2.ratio.CP <- lmerTest::lmer(amp ~ ratio.num + time_point + (time_point|subj_num), # correlated slope & intercept
+model.n2.ratio.CP <- lmerTest::lmer(amp ~ ratio.num + time_point + (1|subj_num), # correlated slope & intercept
                                      data = subset(data.n2, KL.cat == "CP"), REML = T)
 
 model.n2.ratio.SS.factor <- lmerTest::lmer(amp ~ ratio + time_point + (time_point|subj_num), # correlated slope & intercept
@@ -386,9 +364,9 @@ data.n2 %>%
   geom_errorbar(aes(ymin = ci_lower, ymax = ci_upper),
                 position=position_dodge(.1), width=.2, linewidth=.6) +
   labs(x = "Numerical ratio", y = "Estimated marginal means of N2 amplitude (mV)", color = "CP status")
-### Distance -----
+### Exact distance -----
 
-model.n2.distance.full <- lmerTest::lmer(amp ~ distance * KL.cat + time_point + (time_point|subj_num), # correlated slope & intercept
+model.n2.distance.full <- lmerTest::lmer(amp ~ distance * KL.cat + time_point + (1|subj_num), # correlated slope & intercept
                                               data = data.n2, REML = T)
 
 
@@ -400,9 +378,9 @@ model.n2.distance.full <- lmerTest::lmer(amp ~ distance * KL.cat + time_point + 
 # boxplot(data=data.n2, amp ~ distance)
 
 # break down KL levels and test linear effect of distance
-model.n2.distance.SS <- lmerTest::lmer(amp ~ distance + time_point + (time_point|subj_num), # correlated slope & intercept
+model.n2.distance.SS <- lmerTest::lmer(amp ~ distance + time_point + (1|subj_num), # correlated slope & intercept
                                     data = subset(data.n2, KL.cat == "SS"), REML = T)
-model.n2.distance.CP <- lmerTest::lmer(amp ~ distance + time_point + (time_point|subj_num), # correlated slope & intercept
+model.n2.distance.CP <- lmerTest::lmer(amp ~ distance + time_point + (1|subj_num), # correlated slope & intercept
                                     data = subset(data.n2, KL.cat == "CP"), REML = T)
 #### test model assumption -----
 # plot(resid(model.n2.full), data_sample$erp.n2) # Linearity (visual inspection)
