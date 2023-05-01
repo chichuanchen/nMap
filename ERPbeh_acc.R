@@ -27,7 +27,7 @@ acc.by.subj.cond <- nmap_data.long %>%
            cue < probe ~ probe/cue),
          exact.dist = abs(cue - probe))
 
-write.csv(acc.by.subj.cond, file = "../data/ERPbeh/ERPbeh_acc_subj_6cond.csv")
+# write.csv(acc.by.subj.cond, file = "../data/ERPbeh/ERPbeh_acc_subj_6cond.csv")
 
 ## Accuracy by subject (across all 6 conditions) -----
 
@@ -80,6 +80,7 @@ ERPbeh_info_by.cond <- acc.by.subj.cond %>%
              KL %in% c(5:8) ~ "CP",
              TRUE ~ as.character(NA))))
 
+write.csv(ERPbeh_info_by.cond, file = "../data/ERPbeh/ERPbeh_acc_subj_6cond.csv")
 ### Acc by distance -----
 # approximate distance
 ERPbeh_info_by.cond %>%
