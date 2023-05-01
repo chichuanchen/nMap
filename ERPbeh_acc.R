@@ -185,33 +185,24 @@ ERPbeh_info_by.subj %>%
 
 #### Overall performance distance effect? ----
 # by group
-model.exact.dis.CP <- lm(avg.acc.exact.dist ~ exact.dist,
-                         data = subset(ERPbeh_info_by.exact.dist, KL.cat == "CP"))
 
-anova(model.exact.dis.CP)
+model.exact.dis.CP <- aov(cond_acc~factor(exact.dist)+Error(factor(subj_num)), 
+                data = subset(ERPbeh_info_by.cond, KL.cat == "CP"))
 summary(model.exact.dis.CP)
 
-model.approx.dis.CP <- lm(avg.acc.approx.dist ~ approx.dist,
-                          data = subset(ERPbeh_info_by.approx.dist, KL.cat == "CP"))
-
-anova(model.approx.dis.CP)
+model.approx.dis.CP <- aov(cond_acc~factor(approx.dist)+Error(factor(subj_num)), 
+                          data = subset(ERPbeh_info_by.cond, KL.cat == "CP"))
 summary(model.approx.dis.CP)
+
 #
 
-model.exact.dis.SS <- lm(avg.acc.exact.dist ~ exact.dist,
-     data = subset(ERPbeh_info_by.exact.dist, KL.cat == "SS"))
-
-anova(model.exact.dis.SS)
+model.exact.dis.SS <- aov(cond_acc~factor(exact.dist)+Error(factor(subj_num)), 
+                          data = subset(ERPbeh_info_by.cond, KL.cat == "SS"))
 summary(model.exact.dis.SS)
 
-
-
-model.approx.dis.SS <- lm(avg.acc.approx.dist ~ approx.dist,
-                         data = subset(ERPbeh_info_by.approx.dist, KL.cat == "SS"))
-
-anova(model.approx.dis.SS)
+model.approx.dis.SS <- aov(cond_acc~factor(approx.dist)+Error(factor(subj_num)), 
+                           data = subset(ERPbeh_info_by.cond, KL.cat == "SS"))
 summary(model.approx.dis.SS)
-
 
 
 
