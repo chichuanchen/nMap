@@ -1,7 +1,7 @@
 # SETUP
 library("lme4")
 library("car")
-
+library("lmerTest")
 
 rm(list = ls())
 # import all data -----
@@ -187,6 +187,15 @@ ERPbeh_info_by.subj %>%
 #### Overall performance distance effect? ----
 # by group
 
+lmer.exact.CP <- lmerTest::lmer(cond_acc ~ exact.dist + time_point + (1|subj_num),
+     data = subset(ERPbeh_info_by.cond, KL.cat == "CP"))
+summary(lmer.exact.CP)
+
+lmer.approx.CP <- lmerTest::lmer(cond_acc ~ approx.dist + time_point + (1|subj_num),
+                      data = subset(ERPbeh_info_by.cond, KL.cat == "CP"))
+summary(lmer.approx.CP)
+
+
 model.exact.dis.CP <- aov(cond_acc~factor(exact.dist)+Error(factor(subj_num)), 
                 data = subset(ERPbeh_info_by.cond, KL.cat == "CP"))
 summary(model.exact.dis.CP)
@@ -196,6 +205,14 @@ model.approx.dis.CP <- aov(cond_acc~factor(approx.dist)+Error(factor(subj_num)),
 summary(model.approx.dis.CP)
 
 #
+
+lmer.exact.SS <- lm(cond_acc ~ exact.dist + time_point,
+                                data = subset(ERPbeh_info_by.cond, KL.cat == "SS"))
+summary(lmer.exact.SS)
+
+lmer.approx.SS <- lm(cond_acc ~ approx.dist + time_point,
+                                 data = subset(ERPbeh_info_by.cond, KL.cat == "SS"))
+summary(lmer.approx.SS)
 
 model.exact.dis.SS <- aov(cond_acc~factor(exact.dist)+Error(factor(subj_num)), 
                           data = subset(ERPbeh_info_by.cond, KL.cat == "SS"))
