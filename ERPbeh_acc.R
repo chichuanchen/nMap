@@ -175,7 +175,7 @@ t.test(ERPbeh_info_by.subj.CP$INHIBIT, ERPbeh_info_by.subj.SS$INHIBIT)
 t.test(ERPbeh_info_by.subj.CP$VOCAB, ERPbeh_info_by.subj.SS$VOCAB)
 
 #### Overall performance > chance? ----
-
+t.test(ERPbeh_info_by.subj$subj_acc, mu=.5)
 t.test(ERPbeh_info_by.subj.SS$subj_acc, mu=.5)
 t.test(ERPbeh_info_by.subj.CP$subj_acc, mu=.5)
 
@@ -185,6 +185,16 @@ ERPbeh_info_by.subj %>%
   
 
 #### Overall performance distance effect? ----
+# by group
+
+lmer.approx <- lm(cond_acc ~ approx.dist + time_point,
+                   data = ERPbeh_info_by.cond)
+summary(lmer.approx)
+
+lmer.exact <- lm(cond_acc ~ exact.dist + time_point,
+                 data = ERPbeh_info_by.cond)
+summary(lmer.exact)
+
 # by group
 
 lmer.exact.CP <- lmerTest::lmer(cond_acc ~ exact.dist + time_point + (1|subj_num),
