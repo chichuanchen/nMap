@@ -136,11 +136,18 @@ Anova(n1_model, type="III")
 summary(n1_model)
 
 
-ggplot(data = bbcor_n1_beh, aes(x=INHIBIT, y=n1.mean.sensitivity.3_1)) +
-  geom_point() +
-  geom_smooth(method="lm",se = F) +
-  labs(x="Inhibition score", y="N1 sensitivity to visual number array") +
-  xlim(0.5, 1)
+ggplot(data = corr.n1sen.inhib, aes(x=INHIBIT, y=n1.mean.sensitivity.3_1)) +
+  geom_point(alpha = 0.3) +
+  geom_smooth(method="lm",se = F, color = "black") +
+  labs(x="Inhibition Score", y="N1 Individuation (3 minus 1)") +
+  xlim(0.5, 1) +
+  theme_classic() +
+  theme(axis.text=element_text(size=12),
+        axis.title=element_text(size=16,face="bold"))
+
+ggsave(filename = "n1_inhibit_cor_plot.jpeg", dpi = "print", width = 4, height = 4,
+       path = "./../Results/")
+  
   
 
 # N2 distance effect ----
