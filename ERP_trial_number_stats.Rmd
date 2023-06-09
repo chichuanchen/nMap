@@ -41,6 +41,10 @@ n_trial_subj <- data_erp_all_indi_trial %>%
   unite("uID", subj_num, time_point, sep = "_", remove = F, na.rm = FALSE) %>%
   mutate(uID = factor(uID)) # Add unique ID column.
 ```
+## Calculate avgerage number of trial per subject
+```{r}
+n_trial_subj %>% group_by(uID) %>% summarise(total_per_subj = sum(n_trial_individual)) %>% summarise(mean_trial=mean(total_per_subj)) %>% as.data.frame()
+```
 
 
 ## Calculate the mean, sd, and range for the number of trials per subject for each of the 6 conditions
