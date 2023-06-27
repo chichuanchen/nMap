@@ -18,7 +18,7 @@ load("../data/ERPbeh/acc.exact.dist.effect.RData")
 data_erp_all <- data_erp_all %>%
   mutate(KL.cat = 
            case_when(
-             KL.cont %in% c(1:4) ~ "SS",
+             KL.cont %in% c(0:4) ~ "SS",
              KL.cont %in% c(5:8) ~ "CP",
              TRUE ~ as.character(NA)))
 
