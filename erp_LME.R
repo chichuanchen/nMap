@@ -281,7 +281,7 @@ glimpse(data.n2)
 
 data.n2.nooutlier <- data.n2 %>% filter(!amp < -100)
 ### Approximate distance -----
-model.n2.ratio.full.factor <- lmerTest::lmer(amp ~ ratio * KL.cat + time_point + (time_point|subj_num), # correlated slope & intercept
+model.n2.ratio.full.factor <- lmerTest::lmer(amp ~ ratio * KL.cat + time_point + (1|subj_num), # correlated slope & intercept
                                               data = data.n2, REML = T)
 model.n2.ratio.full <- lmerTest::lmer(amp ~ ratio.num * KL.cat + time_point + (1|subj_num), # correlated slope & intercept
                                        data = data.n2, REML = T)
@@ -325,9 +325,9 @@ summary(model.n2.ratio.CP)
 
 
 # #### Data for plot: emmeans & pred -----
-# emmean.n2.ratio <- emmeans(model.n2.ratio.full.factor, pairwise~ratio|KL.cat, # within group comparison: compare levels of ratio within each level of KL
-#                             mode = "satterthwaite",
-#                             lmerTest.limit = 240000)
+emmean.n2.ratio <- emmeans(model.n2.ratio.full.factor, pairwise~ratio|KL.cat, # within group comparison: compare levels of ratio within each level of KL
+                            mode = "satterthwaite",
+                            lmerTest.limit = 240000)
 # emmean.n2.ratio$contrasts %>% data.frame()
 # data.emmean.n2.ratio <- emmean.n2.ratio$emmeans %>% 
 #   data.frame() %>% 
