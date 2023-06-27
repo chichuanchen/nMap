@@ -1,3 +1,12 @@
+##### Content
+# This script performs:
+# - Aggregate ERP behavioral data according to the 6 base conditions.
+# - Calculates individual subject ERP behavioral accuracy (collapsing across conditions).
+# - Calculates individual subject ERP behavioral accuracy indexing approximate distance effect (close minus far) 
+# - Calculates individual subject ERP behavioral accuracy indexing exact distance effect (2 minus 1) 
+# - mean age time of participation
+# - mean age by CP status
+
 # SETUP
 library("lme4")
 library("car")
@@ -76,7 +85,7 @@ ERPbeh_info_by.cond <- acc.by.subj.cond %>%
   right_join(beh_data.raw, by = c("subj_num", "time_point")) %>%
   mutate(KL.cat = 
            factor(case_when(
-             KL %in% c(1:4) ~ "SS",
+             KL %in% c(0:4) ~ "SS",
              KL %in% c(5:8) ~ "CP",
              TRUE ~ as.character(NA))))
 
@@ -109,7 +118,7 @@ ERPbeh_info_by.exact.dist <- acc.exact.dist.effect %>%
   right_join(beh_data.raw, by = c("subj_num", "time_point")) %>%
   mutate(KL.cat = 
            factor(case_when(
-             KL %in% c(1:4) ~ "SS",
+             KL %in% c(0:4) ~ "SS",
              KL %in% c(5:8) ~ "CP",
              TRUE ~ as.character(NA))))
 
@@ -118,7 +127,7 @@ ERPbeh_info_by.approx.dist <- acc.approx.dist.effect %>%
   right_join(beh_data.raw, by = c("subj_num", "time_point")) %>%
   mutate(KL.cat = 
            factor(case_when(
-             KL %in% c(1:4) ~ "SS",
+             KL %in% c(0:4) ~ "SS",
              KL %in% c(5:8) ~ "CP",
              TRUE ~ as.character(NA))))
 
@@ -127,7 +136,7 @@ ERPbeh_info_by.subj <- acc.by.subj %>%
   right_join(beh_data.raw, by = c("subj_num", "time_point")) %>%
   mutate(KL.cat = 
            factor(case_when(
-             KL %in% c(1:4) ~ "SS",
+             KL %in% c(0:4) ~ "SS",
              KL %in% c(5:8) ~ "CP",
              TRUE ~ as.character(NA)))) %>%
   ungroup()
@@ -176,8 +185,11 @@ t.test(ERPbeh_info_by.subj.CP$VOCAB, ERPbeh_info_by.subj.SS$VOCAB)
 
 #### Overall performance > chance? ----
 t.test(ERPbeh_info_by.subj$subj_acc, mu=.5)
+sd(ERPbeh_info_by.subj$subj_acc, na.rm=T)
 t.test(ERPbeh_info_by.subj.SS$subj_acc, mu=.5)
+sd(ERPbeh_info_by.subj.SS$subj_acc, na.rm=T)
 t.test(ERPbeh_info_by.subj.CP$subj_acc, mu=.5)
+sd(ERPbeh_info_by.subj.CP$subj_acc, na.rm=T)
 
 #### Overall performance group difference? ----
 ERPbeh_info_by.subj %>%
