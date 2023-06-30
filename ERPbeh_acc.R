@@ -145,7 +145,7 @@ ERPbeh_info_by.subj <- acc.by.subj %>%
 
 ## Descriptive -----
 table(duplicated(ERPbeh_info_by.subj$subj_num))
-
+table(ERPbeh_info_by.subj$KL)
 #### Overall task accuracy and age -----
 ERPbeh_info_by.subj %>%
   group_by(KL.cat) %>%
