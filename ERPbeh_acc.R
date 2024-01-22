@@ -182,7 +182,7 @@ t.test(ERPbeh_info_by.subj.CP$WM, ERPbeh_info_by.subj.SS$WM)
 t.test(ERPbeh_info_by.subj.CP$CONFLICT, ERPbeh_info_by.subj.SS$CONFLICT)
 t.test(ERPbeh_info_by.subj.CP$INHIBIT, ERPbeh_info_by.subj.SS$INHIBIT)
 t.test(ERPbeh_info_by.subj.CP$VOCAB, ERPbeh_info_by.subj.SS$VOCAB)
-
+t.test(ERPbeh_info_by.subj.CP$VOCAB.SS, ERPbeh_info_by.subj.SS$VOCAB.SS)
 #### Overall performance > chance? ----
 t.test(ERPbeh_info_by.subj$subj_acc, mu=.5)
 sd(ERPbeh_info_by.subj$subj_acc, na.rm=T)
