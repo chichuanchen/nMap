@@ -40,6 +40,12 @@ age_df <- age_raw %>%
   mutate(time_point = as.numeric(str_extract(time_point, "\\d+"))) %>%
   select(subj_num, time_point, age.days)
 
+vocab.ss <- read_xlsx("TRN4.20.21.USonlyCCshare.xlsx") %>%
+  select(subjnumber, vocabPREss) %>%
+  rename(subj_num = subjnumber,
+         VOCAB.SS = vocabPREss) %>%
+  mutate(time_point = 1)
+
 # tidy - 
 data.tidy <- data.raw %>%
   
@@ -55,7 +61,8 @@ data.tidy <- data.raw %>%
                          time_point == 2 ~ INHIBITPOST),
     VOCAB = case_when(time_point == 1 ~ VOCABRAWPRE)) %>%
   select(!ends_with(c("PRE", "POST"))) %>%
-  left_join(age_df, by = c("subj_num", "time_point"))
+  left_join(age_df, by = c("subj_num", "time_point")) %>%
+  left_join(vocab.ss, by = c("subj_num", "time_point"))
 
 glimpse(data.tidy)
 
