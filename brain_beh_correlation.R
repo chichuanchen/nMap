@@ -35,6 +35,10 @@ wm.ppvt <- beh_data.raw %>%
   drop_na(WM, VOCAB)
 cor.test(wm.ppvt$WM, wm.ppvt$VOCAB, method = "pearson")
 
+wm.ppvt <- beh_data.raw %>%
+  drop_na(WM, VOCAB.SS)
+cor.test(wm.ppvt$WM, wm.ppvt$VOCAB.SS, method = "pearson")
+
 wm.age <- beh_data.raw %>%
   drop_na(WM, age.days)
 cor.test(wm.age$WM, wm.age$age.days, method = "pearson")
@@ -97,6 +101,9 @@ corr.n1sen.conflict <- bbcor_n1_beh %>%
 corr.n1sen.ppvt <- bbcor_n1_beh %>%
   drop_na(n1.mean.sensitivity.3_1, VOCAB)
 
+corr.n1sen.ppvt.ss <- bbcor_n1_beh %>%
+  drop_na(n1.mean.sensitivity.3_1, VOCAB.SS)
+
 corr.n1sen.age <- bbcor_n1_beh %>%
   drop_na(n1.mean.sensitivity.3_1, age.days)
 
@@ -106,6 +113,7 @@ cor.test(corr.n1sen.inhib$n1.mean.sensitivity.3_1, corr.n1sen.inhib$INHIBIT, met
 cor.test(corr.n1sen.wm$n1.mean.sensitivity.3_1, corr.n1sen.wm$WM, method = "pearson")
 cor.test(corr.n1sen.conflict$n1.mean.sensitivity.3_1, corr.n1sen.conflict$CONFLICT, method = "pearson")
 cor.test(corr.n1sen.ppvt$n1.mean.sensitivity.3_1, corr.n1sen.ppvt$VOCAB, method = "pearson")
+cor.test(corr.n1sen.ppvt.ss$n1.mean.sensitivity.3_1, corr.n1sen.ppvt.ss$VOCAB.SS, method = "pearson")
 cor.test(corr.n1sen.age$n1.mean.sensitivity.3_1, corr.n1sen.age$age.days, method = "pearson")
 
 pvals <- cor.test(corr.n1sen.inhib$n1.mean.sensitivity.3_1, corr.n1sen.inhib$INHIBIT, method = "pearson")$p.value
@@ -203,6 +211,9 @@ corr.n2exact.conflict <- bbcor_n2.exact.dist_beh %>%
 corr.n2exact.ppvt <- bbcor_n2.exact.dist_beh %>%
   drop_na(n2.exact.dist.2_1, VOCAB)
 
+corr.n2exact.ppvt.ss <- bbcor_n2.exact.dist_beh %>%
+  drop_na(n2.exact.dist.2_1, VOCAB.SS)
+
 corr.n2exact.age <- bbcor_n2.exact.dist_beh %>%
   drop_na(n2.exact.dist.2_1, age.days)
 
@@ -210,6 +221,7 @@ cor.test(corr.n2exact.inhib$n2.exact.dist.2_1, corr.n2exact.inhib$INHIBIT, metho
 cor.test(corr.n2exact.wm$n2.exact.dist.2_1, corr.n2exact.wm$WM, method = "pearson")
 cor.test(corr.n2exact.conflict$n2.exact.dist.2_1, corr.n2exact.conflict$CONFLICT, method = "pearson")
 cor.test(corr.n2exact.ppvt$n2.exact.dist.2_1, corr.n2exact.ppvt$VOCAB, method = "pearson")
+cor.test(corr.n2exact.ppvt.ss$n2.exact.dist.2_1, corr.n2exact.ppvt.ss$VOCAB.SS, method = "pearson")
 cor.test(corr.n2exact.age$n2.exact.dist.2_1, corr.n2exact.age$age.days, method = "pearson")
 
 pvals <- cor.test(corr.n2exact.inhib$n2.exact.dist.2_1, corr.n2exact.inhib$INHIBIT, method = "pearson")$p.value
