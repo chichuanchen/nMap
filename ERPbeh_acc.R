@@ -48,6 +48,9 @@ acc.by.subj <-  acc.by.subj.cond %>%
             subj_acc_se = subj_acc_sd/sqrt(n)) %>%
   ungroup()
 
+# subjects that performed below chance
+below.chance.subj <- acc.by.subj %>% filter(subj_acc < 0.5)
+
 write.csv(acc.by.subj, file = "../data/ERPbeh/ERPbeh_acc_subj.csv")
 
 ## Accuracy by approximate distance effect (close minus far) -----
