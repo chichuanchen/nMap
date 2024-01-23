@@ -22,12 +22,8 @@ data_erp_all <- data_erp_all %>%
              KL.cont %in% c(5:8) ~ "CP",
              TRUE ~ as.character(NA)))
 
-# some descriptive beh stats
-range(beh_data.raw$WM, na.rm = T)
-range(beh_data.raw$CONFLICT, na.rm = T)
-range(beh_data.raw$INHIBIT, na.rm = T)
-range(beh_data.raw$VOCAB, na.rm = T)
-range(beh_data.raw$VOCAB.SS, na.rm = T)
+
+
 # Cog measures correlations -----
 wm.conflict <- beh_data.raw %>%
   drop_na(WM, CONFLICT)
