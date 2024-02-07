@@ -25,7 +25,7 @@ EF_df_tidied <- EF_df %>%
          WM_post = WMpostALL,
          conflict_post = ConflictPOST,
          inhibit_post = InhibitPOST) %>%
-  pivot_longer(cols = -c(subj_num, -sex, -agemonths, -HAVEPOST),
+  pivot_longer(cols = -c(subj_num, -sex, agemonths, -HAVEPOST),
                names_to = c(".value", "time_point"),
                names_pattern = "(.+)_(.+)") %>%
   drop_na() %>%
@@ -37,8 +37,11 @@ glimpse(EF_df_tidied)
 unmatched_rows <- anti_join(rejected_subs, EF_df_tidied)
 
 EF_rejected <- merge(rejected_subs, EF_df_tidied)
-EF_accepted <- beh_data.raw %>% select(subj_num, time_point, WM, CONFLICT, INHIBIT)
+EF_accepted <- beh_data %>% select(subj_num, time_point, WM, CONFLICT, INHIBIT, age.days) %>%
+  mutate(agemonths = age.days/30)
 
-t.test(EF_rejected$WM, EF_accepted$WM)
-t.test(EF_rejected$conflict, EF_accepted$CONFLICT)
-t.test(EF_rejected$inhibit, EF_accepted$INHIBIT)
+t.test(EF_rejected$agemonths, EF_accepted$agemonths)
+
+t.test(EF_rejected$WM, EF_accepted$WM, var.equal = T)
+t.test(EF_rejected$conflict, EF_accepted$CONFLICT, var.equal = T)
+t.test(EF_rejected$inhibit, EF_accepted$INHIBIT, var.equal = T)

@@ -1,3 +1,5 @@
+##### Notes ----
+# for running LME models on ERP data; trials were already averaged across 6 conditions.
 # Set up -----
 library("tidyverse")
 library("readxl")
@@ -9,7 +11,7 @@ library("emmeans") # extract estimated marginal means
 library("langcog") # for non-paramatric bootstrap CI
 
 rm(list = ls())
-load("../data/ERP/tidied/erp_tidied.RData")
+load("./data/ERP/tidied/erp_tidied.RData")
 
 theme_set(theme_bw())
 
@@ -19,7 +21,8 @@ data_erp_all <- data_erp_all %>%
            case_when(
              KL.cont %in% c(0:4) ~ "SS",
              KL.cont %in% c(5:8) ~ "CP",
-             TRUE ~ as.character(NA)))
+             TRUE ~ as.character(NA))) %>%
+  drop_na(KL.cat)
          
 data_erp_all$subj_num <- as.factor(data_erp_all$subj_num)
 data_erp_all$time_point <- as.factor(data_erp_all$time_point)
@@ -28,26 +31,6 @@ data_erp_all$ratio <- factor(data_erp_all$ratio, levels = c("close", "med", "far
 data_erp_all$distance <- as.numeric(data_erp_all$distance)
 
 glimpse(data_erp_all)
-
-# Data summarization -----
-
-# number of unique subjects
-length(unique(data_erp_all$subj_num))
-
-# number of sessions
-data_erp_all %>% 
-  distinct(subj_num, time_point) %>% 
-  group_by(subj_num) %>% 
-  summarise(nT=n()) %>% 
-  group_by(nT) %>% 
-  summarise(n=n())
-
-# number of SS and CP knowers
-data_erp_all %>% 
-  group_by(subj_num, time_point, KL.cat) %>% 
-  summarise(nT=n()) %>% 
-  group_by(KL.cat) %>% 
-  summarise(n=n())
 
 # FIT LME MODEL -----
 ## N1 -----
@@ -68,8 +51,20 @@ model.n1.cardinal.full.factor <- data.n1 %>%
 model.n1.cardinal.SS <- lmerTest::lmer(amp ~ cardinal + time_point + (1|subj_num), # random subject intercept
                                        data = subset(data.n1, KL.cat == "SS"), REML = T)
 
+model.n1.cardinal.SS.factor <- data.n1 %>%
+  filter(KL.cat == "SS") %>%
+  mutate(cardinal = factor(cardinal)) %>%
+  lmerTest::lmer(data = ., amp ~ cardinal + time_point + (1|subj_num), # correlated slope & intercept
+                 REML = T)
+
 model.n1.cardinal.CP <- lmerTest::lmer(amp ~ cardinal + time_point + (1|subj_num), # random subject intercept
                                        data = subset(data.n1, KL.cat == "CP"), REML = T)
+
+model.n1.cardinal.CP.factor <- data.n1 %>%
+  filter(KL.cat == "CP") %>%
+  mutate(cardinal = factor(cardinal)) %>%
+  lmerTest::lmer(data = ., amp ~ cardinal + time_point + (1|subj_num), # correlated slope & intercept
+                 REML = T)
 #### test model assumption -----
 # plot(resid(model.n1.cardinal.full), data.n1$amp) # Linearity (visual inspection)
 # qqmath(model.n1.cardinal.full) # Normal distribution of residuals (visual inspection for sample N > 5000)
@@ -89,6 +84,14 @@ summary(model.n1.cardinal.CP) # significant cardinal effect
 emmean.n1.cardinal <- emmeans(model.n1.cardinal.full.factor, pairwise~cardinal|KL.cat, # within group comparison: compare levels of ratio within each level of KL
                               mode = "satterthwaite",
                               lmerTest.limit = 240000)
+
+emmean.n1.cardinal.SS <- emmeans(model.n1.cardinal.SS.factor, pairwise~cardinal, # within group comparison: compare levels of ratio within each level of KL
+                              mode = "satterthwaite",
+                              lmerTest.limit = 240000)
+
+emmean.n1.cardinal.CP <- emmeans(model.n1.cardinal.CP.factor, pairwise~cardinal, # within group comparison: compare levels of ratio within each level of KL
+                                 mode = "satterthwaite",
+                                 lmerTest.limit = 240000)
 # emmean.n1.cardinal$contrasts %>% data.frame()
 # data.emmean.n1.cardinal <- emmean.n1.cardinal$emmeans %>% data.frame() # used for plot
 
