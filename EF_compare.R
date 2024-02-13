@@ -10,7 +10,7 @@ rejected_subs <- read_xlsx("ERPrejectedSUBS.xlsx") %>%
   select(subj_num, time_point)
 
 my_vars <- c("subjnumber", "sex", "agemonths", 
-             "HAVEPOST", 
+             "HAVEPOST", "vocabPREss",
              "WMpreALL", "ConflictPRE", "InhibitPRE", 
              "WMpostALL", "ConflictPOST", "InhibitPOST")
 
@@ -24,8 +24,9 @@ EF_df_tidied <- EF_df %>%
          inhibit_pre = InhibitPRE,
          WM_post = WMpostALL,
          conflict_post = ConflictPOST,
-         inhibit_post = InhibitPOST) %>%
-  pivot_longer(cols = -c(subj_num, -sex, agemonths, -HAVEPOST),
+         inhibit_post = InhibitPOST,
+         vocab = vocabPREss) %>%
+  pivot_longer(cols = -c(subj_num, -sex, agemonths, -HAVEPOST, vocab),
                names_to = c(".value", "time_point"),
                names_pattern = "(.+)_(.+)") %>%
   drop_na() %>%
@@ -37,11 +38,13 @@ glimpse(EF_df_tidied)
 unmatched_rows <- anti_join(rejected_subs, EF_df_tidied)
 
 EF_rejected <- merge(rejected_subs, EF_df_tidied)
-EF_accepted <- beh_data %>% select(subj_num, time_point, WM, CONFLICT, INHIBIT, age.days) %>%
+EF_accepted <- beh_data %>% select(subj_num, time_point, WM, CONFLICT, INHIBIT, age.days, VOCAB.SS) %>%
   mutate(agemonths = age.days/30)
 
-t.test(EF_rejected$agemonths, EF_accepted$agemonths)
+t.test(EF_rejected$agemonths, EF_accepted$agemonths, var.equal = T)
 
 t.test(EF_rejected$WM, EF_accepted$WM, var.equal = T)
 t.test(EF_rejected$conflict, EF_accepted$CONFLICT, var.equal = T)
 t.test(EF_rejected$inhibit, EF_accepted$INHIBIT, var.equal = T)
+
+t.test(EF_rejected$vocab, EF_accepted$VOCAB.SS, var.equal = T)

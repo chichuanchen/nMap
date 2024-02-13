@@ -14,13 +14,27 @@ library("lmerTest")
 
 rm(list = ls())
 # import all data -----
-load("../data/ERPbeh/tidied/nmap_data_tidied.RData") 
-load("../data/beh/beh_data_tidied.RData")
-load("../data/ERP/tidied/erp_tidied.RData")
+load("./data/ERPbeh/tidied/nmap_data_tidied.RData") 
+load("./data/beh/beh_data_tidied.RData")
+load("./data/ERP/tidied/erp_tidied.RData")
 
 # wide format acc already calculated in a tibble, now output
 # write.csv(nmap_acc.wide, file = "acc_subj_6cond_wide.csv", row.names = FALSE)
 
+data_erp_all <- data_erp_all %>%
+  # drop_na(KL.cont) %>%
+  mutate(KL.cat =
+           case_when(
+             KL.cont %in% c(0:4) ~ "SS",
+             KL.cont %in% c(5:8) ~ "CP",
+             TRUE ~ as.character(NA))) %>%
+  drop_na(KL.cat)
+
+session_list.erp <- data_erp_all %>%
+  distinct(subj_num, time_point) %>%
+  arrange(subj_num, time_point)
+
+whatshappening <- session_list.erp %>% full_join(acc.by.subj)
 # ERPbeh #######################################################################
 ## Accuracy by condition (6) BASE-----
 
@@ -34,7 +48,8 @@ acc.by.subj.cond <- nmap_data.long %>%
   mutate(approx.dist = case_when(
            cue > probe ~ cue/probe,
            cue < probe ~ probe/cue),
-         exact.dist = abs(cue - probe))
+         exact.dist = abs(cue - probe)) %>%
+  semi_join(session_list.erp)
 
 # write.csv(acc.by.subj.cond, file = "../data/ERPbeh/ERPbeh_acc_subj_6cond.csv")
 
@@ -46,7 +61,8 @@ acc.by.subj <-  acc.by.subj.cond %>%
             subj_acc_sd = sd(cond_acc, na.rm=T),
             n=n(),
             subj_acc_se = subj_acc_sd/sqrt(n)) %>%
-  ungroup()
+  ungroup() %>%
+  semi_join(session_list.erp)
 
 # subjects that performed below chance
 below.chance.subj <- acc.by.subj %>% filter(subj_acc < 0.5)
@@ -90,7 +106,8 @@ ERPbeh_info_by.cond <- acc.by.subj.cond %>%
            factor(case_when(
              KL %in% c(0:4) ~ "SS",
              KL %in% c(5:8) ~ "CP",
-             TRUE ~ as.character(NA))))
+             TRUE ~ as.character(NA)))) %>%
+  drop_na(KL.cat)
 
 write.csv(ERPbeh_info_by.cond, file = "../data/ERPbeh/ERPbeh_acc_subj_6cond.csv")
 ### Acc by distance -----
@@ -123,7 +140,8 @@ ERPbeh_info_by.exact.dist <- acc.exact.dist.effect %>%
            factor(case_when(
              KL %in% c(0:4) ~ "SS",
              KL %in% c(5:8) ~ "CP",
-             TRUE ~ as.character(NA))))
+             TRUE ~ as.character(NA)))) %>%
+  drop_na(KL.cat)
 
 ## By approximate distance (3) -----
 ERPbeh_info_by.approx.dist <- acc.approx.dist.effect %>%
@@ -132,7 +150,8 @@ ERPbeh_info_by.approx.dist <- acc.approx.dist.effect %>%
            factor(case_when(
              KL %in% c(0:4) ~ "SS",
              KL %in% c(5:8) ~ "CP",
-             TRUE ~ as.character(NA))))
+             TRUE ~ as.character(NA)))) %>%
+  drop_na(KL.cat)
 
 ## By subject -----
 ERPbeh_info_by.subj <- acc.by.subj %>%
@@ -142,7 +161,8 @@ ERPbeh_info_by.subj <- acc.by.subj %>%
              KL %in% c(0:4) ~ "SS",
              KL %in% c(5:8) ~ "CP",
              TRUE ~ as.character(NA)))) %>%
-  ungroup()
+  ungroup() %>%
+  drop_na(KL.cat)
 
 
 
@@ -152,6 +172,16 @@ table(ERPbeh_info_by.subj$KL)
 #### Overall task accuracy and age -----
 ERPbeh_info_by.subj %>%
   group_by(KL.cat) %>%
+  summarise(mean.acc.KL = mean(subj_acc, na.rm=T),
+            sd.acc.KL = sd(subj_acc, na.rm=T),
+            n = n(),
+            se.acc.KL = sd.acc.KL/sqrt(n),
+            mean.age = mean(age.days)/365,
+            sd.age = sd(age.days)/365) %>%
+  as.data.frame()
+
+ERPbeh_info_by.subj %>%
+  group_by(time_point) %>%
   summarise(mean.acc.KL = mean(subj_acc, na.rm=T),
             sd.acc.KL = sd(subj_acc, na.rm=T),
             n = n(),
@@ -178,17 +208,11 @@ ERPbeh_info_by.subj.SS <- ERPbeh_info_by.subj %>%
 ERPbeh_info_by.subj.CP <- ERPbeh_info_by.subj %>%
   filter(KL.cat == "CP") %>%
   ungroup() 
-#### Age and EF and vocab difference between groups? -----
 
-t.test(ERPbeh_info_by.subj.CP$age.days, ERPbeh_info_by.subj.SS$age.days)
-t.test(ERPbeh_info_by.subj.CP$WM, ERPbeh_info_by.subj.SS$WM)
-t.test(ERPbeh_info_by.subj.CP$CONFLICT, ERPbeh_info_by.subj.SS$CONFLICT)
-t.test(ERPbeh_info_by.subj.CP$INHIBIT, ERPbeh_info_by.subj.SS$INHIBIT)
-t.test(ERPbeh_info_by.subj.CP$VOCAB, ERPbeh_info_by.subj.SS$VOCAB)
-t.test(ERPbeh_info_by.subj.CP$VOCAB.SS, ERPbeh_info_by.subj.SS$VOCAB.SS)
 #### Overall performance > chance? ----
 t.test(ERPbeh_info_by.subj$subj_acc, mu=.5)
 sd(ERPbeh_info_by.subj$subj_acc, na.rm=T)
+
 t.test(ERPbeh_info_by.subj.SS$subj_acc, mu=.5)
 sd(ERPbeh_info_by.subj.SS$subj_acc, na.rm=T)
 t.test(ERPbeh_info_by.subj.CP$subj_acc, mu=.5)
