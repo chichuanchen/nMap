@@ -1,7 +1,16 @@
 rm(list=ls())
 load("./beh/beh_data_tidied.RData")
 
-CCshare <- read_xlsx("TRN4.20.21.USonlyCCshare.xlsx") # this one
+beh_data <- beh_data.raw %>%
+  drop_na(KL) %>%
+  mutate(KL.cat =
+           case_when(
+             KL %in% c(0:4) ~ "SS",
+             KL %in% c(5:8) ~ "CP",
+             TRUE ~ as.character(NA)))
+
+
+CCshare <- read_xlsx("./beh/TRN4.20.21.USonlyCCshare.xlsx") # this one
 # plosone <- read_xlsx("TRN_DATASET_PLOS_SHARE10.29.21.xlsx") 
 
 rejected_subs <- read_xlsx("ERPrejectedSUBS.xlsx") %>%
