@@ -57,3 +57,45 @@ t.test(EF_rejected$conflict, EF_accepted$CONFLICT, var.equal = T)
 t.test(EF_rejected$inhibit, EF_accepted$INHIBIT, var.equal = T)
 
 t.test(EF_rejected$vocab, EF_accepted$VOCAB.SS, var.equal = T)
+
+# new analyses after R2 -----
+# A. Excluded group: 42 subjects (for the 4 that contributed 2 trials, get first 
+# time point). Included group: 128 subjects minus whoever has an excluded session = 102 subjects
+
+ex_group <- EF_rejected %>% 
+  distinct(subj_num, .keep_all = T)
+
+in_group <- EF_accepted %>%
+  arrange(time_point) %>% 
+  distinct(subj_num, .keep_all = TRUE) %>%
+  filter(!subj_num %in% ex_group$subj_num)
+
+t.test(ex_group$agemonths, in_group$agemonths, var.equal = T) #*
+
+t.test(ex_group$WM, in_group$WM, var.equal = T)
+t.test(ex_group$conflict, in_group$CONFLICT, var.equal = T)
+t.test(ex_group$inhibit, in_group$INHIBIT, var.equal = T)
+
+t.test(ex_group$vocab, in_group$VOCAB.SS, var.equal = T)
+
+# B. Group comparison within time 1 and time 2
+
+time1_in <- EF_accepted %>% filter(time_point == 1)
+time2_in <- EF_accepted %>% filter(time_point == 2)
+
+time1_ex <- EF_rejected %>% filter(time_point == 1)
+time2_ex <- EF_rejected %>% filter(time_point == 2)
+
+t.test(time1_in$agemonths, time1_ex$agemonths, var.equal = T)
+t.test(time2_in$agemonths, time2_ex$agemonths, var.equal = T) #*
+
+t.test(time1_in$WM, time1_ex$WM, var.equal = T)
+t.test(time2_in$WM, time2_ex$WM, var.equal = T) #*
+
+t.test(time1_in$CONFLICT, time1_ex$conflict, var.equal = T) 
+t.test(time2_in$CONFLICT, time2_ex$conflict, var.equal = T) 
+
+t.test(time1_in$INHIBIT, time1_ex$inhibit, var.equal = T) 
+t.test(time2_in$INHIBIT, time2_ex$inhibit, var.equal = T) 
+
+t.test(time1_in$VOCAB.SS, time1_ex$vocab, var.equal = T) #*
