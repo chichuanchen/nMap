@@ -142,3 +142,8 @@ beh_data %>%
   summarise(mean_age = mean(age.days)/30/12,
             sd_age = sd(age.days)/30/12) %>% 
   as.data.frame()
+
+
+#### output for share
+write.csv(beh_data, "./data/beh/SHARED_behavioral_data.csv")
+

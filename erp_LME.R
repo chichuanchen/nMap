@@ -32,6 +32,8 @@ data_erp_all$distance <- as.numeric(data_erp_all$distance)
 
 glimpse(data_erp_all)
 
+write.csv(data_erp_all, file = "./data/ERP/SHARED_erp_data.csv")
+
 # FIT LME MODEL -----
 ## N1 -----
 data.n1 <- data_erp_all %>% 
