@@ -22,7 +22,8 @@ data_erp_all <- data_erp_all %>%
              KL.cont %in% c(0:4) ~ "SS",
              KL.cont %in% c(5:8) ~ "CP",
              TRUE ~ as.character(NA))) %>%
-  drop_na(KL.cat)
+  drop_na(KL.cat) %>%
+  filter(component != "p2a")
          
 data_erp_all$subj_num <- as.factor(data_erp_all$subj_num)
 data_erp_all$time_point <- as.factor(data_erp_all$time_point)
